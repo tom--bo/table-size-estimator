@@ -2,14 +2,17 @@
 %{
 #include <stdio.h>
 #include "lexer.yy.h"
+#define YYDEBUG 1
 %}
 %%
 
-CreateSQL: CREATE TABLE { printf("%d\n", $1); }
+Expression : CreateSQL { printf(">> %d\n", $1); }
+CreateSQL: CREATE TABLE INTNUM { printf("%d %d %d\n", $1, $2, $3); }
 
 %%
 
 #include <stdio.h>
+int yydebug = 1;
 
 void yyerror(char* s) {
 	printf("%s\n", s);
