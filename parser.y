@@ -7,7 +7,7 @@
 %%
 
 Expression : CreateSQL { printf("--a-- %d %s %d\n", $1, yytext, yyval); }
-CreateSQL: CREATE TABLE INTNUM { printf("--b-- %s\n", yytext); }
+CreateSQL: CREATE TABLE INTNUM { printf("--b-- %d %d %d %s\n", $1, $2, $3, yytext); }
 
 %%
 
