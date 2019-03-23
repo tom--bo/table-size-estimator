@@ -6,8 +6,8 @@
 %}
 %%
 
-Expression : CREATE CreateSQL { printf("--a-- %d %d %s %d\n", $1, $2, yytext, yyval); }
-CreateSQL: TABLE INTNUM { printf("--b-- %d %d %s %d\n", $1, $2, yytext, yyval); }
+Expression : CreateSQL { printf("--a-- %d %s %d\n", $1, yytext, yyval); }
+CreateSQL: CREATE TABLE INTNUM { printf("--b-- %s\n", yytext); }
 
 %%
 

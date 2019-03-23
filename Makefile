@@ -6,3 +6,5 @@ clean:
 	rm *.h
 	rm *.c
 	rm *.output
+	rm p
+	rm parser
