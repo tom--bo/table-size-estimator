@@ -3,20 +3,20 @@
 #include <stdio.h>
 #include "lexer.yy.h"
 #define YYDEBUG 1
+
+void yyerror(char* s) {
+	printf("%s\n", s);
+}
 %}
 %%
 
 Expression : CreateSQL { printf("--a-- %d %s %d\n", $1, yytext, yyval); }
-CreateSQL: CREATE TABLE INTNUM { printf("--b-- %d %d %d %s\n", $1, $2, $3, yytext); }
+CreateSQL: CREATE TABLE INTNUM INTNUM { $$ = $3 + $4; printf("--b-- %d %d %d %d %d %s\n", $1, $2, $3, $4, $$, yytext); }
 
 %%
 
 #include <stdio.h>
 int yydebug = 1;
-
-void yyerror(char* s) {
-	printf("%s\n", s);
-}
 
 int main() {
 	if(!yyparse()) printf("successfully ended\n");
