@@ -75,6 +75,8 @@
 "unique"         { return Unique; }
 "unsigned"       { return Unsigned; }
 "using"          { return Using; }
+"utf8"           { return Utf8;}
+"utf8mb4"        { return Utf8mb4;}
 "varbinary"      { return Varbinary; }
 "varchar"        { return Varchar; }
 "virtual"        { return Virtual; }
@@ -82,12 +84,14 @@
 "zerofill"       { return Zerofill; }
 "null"           { return Snull; }
 
+"'.'"              { return SQAnyStr; }
+"."              { return AnyStr; }
 "/*"[a-z0-9 ]*"*/" {}
 "\n"|" "|"\t"      {}
-.                  { printf("Unknown character(s) in lexer\n"); return ERROR; }
 
 %%
                   
+//.                  { printf("Unknown character(s) in lexer\n"); return ERROR; }
 int yywrap(void) {
 	return 1; 
 }
