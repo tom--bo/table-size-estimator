@@ -5,58 +5,58 @@
 #define YYDEBUG 1
 
 void yyerror(char* s) {
-	printf("%s\n", s);
+        printf("%s\n", s);
 }
 %}
 %%
 
-Expression : CreateSQL { printf("--a-- %d %s %d\n", $1, yytext, yyval); }
+Expression: CreateSQL { printf("--a-- %d %s %d\n", $1, yytext, yyval); }
 CreateSQL: Create OptionTemp Table OptionExists SQAnyStr CreateDefinition
 OptionTemp: /* empty */
-		  | Temporary
+          | Temporary
 OptionExists: /* empty */
-			| IF Not Exists
+            | IF Not Exists
 CreateDefinition: SQAnyStr ColDef
-				| IndexKey SQAnyStr IndexType KeyPart
+                | IndexKey SQAnyStr IndexType KeyPart
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
-			 | ColDefOptions NullOrNot
-			 | ColDefOptions DefaultOption
-			 | ColDefOptions AutoIncrement
-			 | ColDefOptions UniquKey
-			 | ColDefOptions PrimaryKey
-			 | ColDefOptions Comment SQAnyStr
-			 | ColDefOptions CollateOption
-			 | ColDefOptions ColumnFormatOption
-			 | ColDefOptions StorageOption
+             | ColDefOptions NullOrNot
+             | ColDefOptions DefaultOption
+             | ColDefOptions AutoIncrement
+             | ColDefOptions UniquKey
+             | ColDefOptions PrimaryKey
+             | ColDefOptions Comment SQAnyStr
+             | ColDefOptions CollateOption
+             | ColDefOptions ColumnFormatOption
+             | ColDefOptions StorageOption
 
 ColumnFormatOption: ColumnFormat 
 DefaultOption: Default DefaultVal
 DefaultVal: SQAnyStr
 NullOrNot: Not Snull
-		 | Snull
+         | Snull
 UniquKey: Unique
-		| Unique Key
+        | Unique Key
 PrimaryKey: Primary
-		  | Primary Key
+          | Primary Key
 CollateOption: Collate CollationType
 CollationType: Utf8
-			 | Utf8mb4
+             | Utf8mb4
 ColumnFormatOption: Fixed
-				  | Dynamic
+                  | Dynamic
                   | Default
 StorageOption: Storage Disk
-			 | Storage Memory
+             | Storage Memory
 IndexKey: Index
-		| Key
+        | Key
 DataType: Int
-		| BigInt
+        | BigInt
 KeyPart: SQAnyStr LPar IntNum RPar AscDesc
 AscDesc: Asc
-	   | Desc
+       | Desc
 IndexType: Using BtreeHash
 BtreeHash: Btree
-		| Hash
+         | Hash
 
 
 %%
@@ -65,5 +65,5 @@ BtreeHash: Btree
 int yydebug = 1;
 
 int main() {
-	if(!yyparse()) printf("successfully ended\n");
+        if(!yyparse()) printf("successfully ended\n");
 }

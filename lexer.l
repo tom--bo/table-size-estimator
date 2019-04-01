@@ -84,7 +84,7 @@
 "zerofill"       { return Zerofill; }
 "null"           { return Snull; }
 
-"'.'"              { return SQAnyStr; }
+"'.'"            { return SQAnyStr; }
 "."              { return AnyStr; }
 "/*"[a-z0-9 ]*"*/" {}
 "\n"|" "|"\t"      {}
