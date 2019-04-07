@@ -1,6 +1,6 @@
 %{
+#include "yystype.h"
 #include "parser.tab.h"
-#define YYSTYPE char *
 %}
 %%
 0|[1-9][0-9]*    { yylval = yytext; return IntNum; }
@@ -85,14 +85,13 @@
 "zerofill"       { yylval = yytext; return Zerofill; }
 "null"           { yylval = yytext; return Snull; }
 
-"[a-z]+[a-z0-9_]*" { yylval = yytext; return SQAnyStr; }
-"."                  { yylval = yytext; return AnyStr; }
+[a-z]+[a-z0-9]*        { yylval = yytext; return SQAnyStr; }
+"`"[a-z]+[a-z0-9]*"`"  { yylval = yytext; return AnyStr; }
 "/*"[a-z0-9 ]*"*/"   {}
 "\n"|" "|"\t"        {}
 
 %%
                   
-//.                  { printf("Unknown character(s) in lexer\n"); return ERROR; }
 int yywrap(void) {
 	return 1; 
 }
