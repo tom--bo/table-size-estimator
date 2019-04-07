@@ -1,4 +1,4 @@
-%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement BigInt Binary Bit Blob Bool Boolean Btree Char Character Collate ColumnFormat Comment Create Date DateTime Dec Decimal Default Desc Disk Double Dynamic Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText MediumBlob MediumInt MediumText Memory National Not Snull Numeric Precision Primary Real Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Error
+%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement BigInt Binary Bit Blob Bool Boolean Btree Char Character Collate ColumnFormat Comment Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText MediumBlob MediumInt MediumText Memory National Not Snull Numeric Precision Primary Real Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Error
 %{
 #include <stdio.h>
 #include "lexer.yy.h"
@@ -49,8 +49,38 @@ StorageOption: Storage Disk
              | Storage Memory
 IndexKey: Index
         | Key
-DataType: Int
+DataType: Bit
+        | TinyInt
+        | Bool
+        | Boolean
+        | SmallInt
+        | MediumInt
+        | Int
+        | Integer
         | BigInt
+        | Decimal
+        | Dec
+        | Float
+        | Double
+        | Double Precision
+        | Date
+        | Datetime
+        | Timestamp
+        | Time
+        | Year
+        | Binary
+        | Varbinary
+        | Varchar
+        | TinyBlob
+        | TinyText
+        | Blob
+        | Text
+        | MediumBlob
+        | MediumText
+        | LongBlob
+        | LongText
+        | Enum
+        | Set
 KeyPart: SQAnyStr LPar IntNum RPar AscDesc
 AscDesc: Asc
        | Desc
