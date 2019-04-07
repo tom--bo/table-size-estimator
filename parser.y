@@ -12,13 +12,15 @@ void yyerror(char* s) {
 %%
 
 Expression: CreateSQL {}
-CreateSQL: Create OptionTemp Table OptionExists SQAnyStr CreateDefinition
-OptionTemp: /* empty */
-          | Temporary
-OptionExists: /* empty */
-            | IF Not Exists
-CreateDefinition: SQAnyStr ColDef { printf("ColDef: %s", $1); }
-                | IndexKey SQAnyStr IndexType KeyPart
+CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar Semi
+OptTemp: /* empty */
+       | Temporary
+OptExists: /* empty */
+         | IF Not Exists
+ColIndexes: ColIndex
+          | ColIndexes Comma ColIndex
+ColIndex: SQAnyStr ColDef { printf("ColDef: %s", $1); }
+        | IndexKey SQAnyStr IndexType KeyPart
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
              | ColDefOptions NullOrNot
