@@ -1,6 +1,6 @@
 all: 
+	bison -d parser.y
 	flex --header-file=lexer.yy.h lexer.l
-	yacc -d -v parser.y
 
 clean:
 	rm *.h
