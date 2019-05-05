@@ -12,16 +12,16 @@ int nowIdx = 0;
 
 // define node
 typedef struct _col {
-	char *name;
-	char *coltype;
-	int size;
-	bool hasIdx;
+    char *name;
+    char *coltype;
+    int size;
+    bool hasIdx;
 } col;
 
 typedef struct _idx {
-	char *idxname;
-	int size;
-	int colId[MAXCOLS];
+    char *idxname;
+    int size;
+    int colId[MAXCOLS];
 } idx;
 
 // define nodes array
@@ -29,33 +29,33 @@ col cols[MAXCOLS] = {};
 idx idxs[MAXIDXS] = {};
 
 void newCol(char *coltype, int size) {
-	/*
-	printf("%s\n", coltype);
-	printf("%d\n", nowCol);
-	*/
+    /*
+    printf("%s\n", coltype);
+    printf("%d\n", nowCol);
+    */
 
-	col c;
-	c.name = "";
-        c.coltype = coltype;
-        c.size = size;
-        c.hasIdx = false;
+    col c;
+    c.name = "";
+    c.coltype = coltype;
+    c.size = size;
+    c.hasIdx = false;
 
-        cols[nowCol] = c;
+    cols[nowCol] = c;
 
-	/*
-	col *c = (col*)malloc(sizeof(col));
-        c->name = "";
-        c->coltype = coltype;
-        c->size = size;
-        c->hasIdx = false;
+    /*
+    col *c = (col*)malloc(sizeof(col));
+    c->name = "";
+    c->coltype = coltype;
+    c->size = size;
+    c->hasIdx = false;
 
-        cols[nowCol] = *c;
-	*/
+    cols[nowCol] = *c;
+    */
 }
 
 
 void yyerror(char* s) {
-        printf("%s\n", s);
+    printf("%s\n", s);
 }
 %}
 %%
@@ -143,12 +143,12 @@ Texts: Text
 Sets: Enum
     | Set
 SizeOption1: /* empty */
-          | LPar IntNum RPar
+           | LPar IntNum RPar
 SizeOption2: /* empty */
-          | LPar IntNum Comma IntNum RPar
+           | LPar IntNum Comma IntNum RPar
 SizeOption1or2: /* empty */
-          | LPar IntNum RPar
-          | LPar IntNum Comma IntNum RPar
+              | LPar IntNum RPar
+              | LPar IntNum Comma IntNum RPar
 NumOptions: /* empty */
           | NumOptions Unsigned
           | NumOptions Zerofill
@@ -166,21 +166,21 @@ BtreeHash: Btree
 int yydebug = 1;
 
 int main() {
-	printf("start\n");
+    printf("start\n");
 
-        if(!yyparse()) {
-		printf("successfully ended\n");
-	}
+    if(!yyparse()) {
+        printf("successfully ended\n");
+    }
 
-        // print all array contents
-        int i;
-        for(i = 0; i<nowCol; i++) {
-        	printf("------\n");
-        	printf("%s\n", cols[i].name);
-        	printf("%s\n", cols[i].coltype);
-        	printf("%d\n", cols[i].size);
-        }
+    // print all array contents
+    int i;
+    for(i = 0; i<nowCol; i++) {
+        printf("------\n");
+        printf("%s\n", cols[i].name);
+        printf("%s\n", cols[i].coltype);
+        printf("%d\n", cols[i].size);
+    }
 
-        // calcurate table size
-        return 0;
+    // calcurate table size
+    return 0;
 }
