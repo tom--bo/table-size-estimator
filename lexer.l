@@ -1,10 +1,11 @@
 %{
+#include <string.h>
 #include "yystype.h"
 #include "parser.tab.h"
 %}
 %%
-0|[1-9][0-9]*    { yylval = yytext; return IntNum; }
-([0-9]+"."[0-9]*)|([0-9]*"."[0-9]+) { return RealNum; }
+0|[1-9][0-9]*    { yylval = strdup(yytext); return IntNum; }
+([0-9]+"."[0-9]*)|([0-9]*"."[0-9]+) { yylval = strdup(yytext); return RealNum; }
 
 ","              { return Comma; }
 ";"              { return Semi; }
