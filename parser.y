@@ -49,18 +49,35 @@ void resetOpt() {
     opt2 = -1;
 }
 
-int colcSize(char *str, int opt1, int opt2) {
+int calcSize(char *str, int opt1, int opt2) {
     int ret = 0;
-    if(strncmp(str,"dec",strlen(str)) || strncmp(str,"decimal",strlen(str)) || strncmp(str,"numeric",strlen(str))) {
+    if(!strncmp(str,"dec",strlen(str)) || !strncmp(str,"decimal",strlen(str)) || !strncmp(str,"numeric",strlen(str))) {
         ret += (opt1/9)*4 + (opt2/9)*4;
         int rem1 = opt1%9;
         int rem2 = opt2%9;
         ret += (rem1+1)/2 + (rem2+1)/2;
-    } else if(strncmp(str,"float",strlen(str))) {
+    } else if(!strncmp(str,"float",strlen(str))) {
         if(opt1 <= 24) {
             ret = 4;
         } else {
             ret = 8;
+        }
+    } else if(!strncmp(str,"bit",strlen(str))) {
+        ret = (opt1+7)/8;
+    } else if(!strncmp(str,"datetime",strlen(str))) {
+        ret = 5;
+        if(opt1 != -1) {
+            ret += opt1 / 2;
+        }
+    } else if(!strncmp(str,"timestamp",strlen(str))) {
+        ret = 4;
+        if(opt1 != -1) {
+            ret += opt1 / 2;
+        }
+    } else if(!strncmp(str,"time",strlen(str))) {
+        ret = 3;
+        if(opt1 != -1) {
+            ret += opt1 / 2;
         }
     }
     return ret;
@@ -73,7 +90,7 @@ void newCol(char *coltype, int size) {
     c.hasIdx = false;
 
     if(size == -1) {
-        c.size = colcSize(coltype, opt1, opt2);
+        c.size = calcSize(coltype, opt1, opt2);
     } else {
         c.size = size;
     }
@@ -136,17 +153,9 @@ DataType: Bits
         | Times
         | Texts
         | Sets
-Bits: Bit SizeOption1
-    | Bool
-    | Boolean
-    | Binary
-    | Varbinary
-    | Varchar
-    | TinyText
-    | TinyBlob
-    | Blob
-    | MediumBlob
-    | LongBlob
+Bits: Bit SizeOption1  { newCol("bit", -1); }
+    | Bool             { newCol("tinyint", 1); }
+    | Boolean          { newCol("tinyint", 1); }
 Nums: TinyInt SizeOption1 NumOptions          { newCol("tinyint", 1); }
     | SmallInt SizeOption1 NumOptions         { newCol("smallint", 2); }
     | MediumInt SizeOption1 NumOptions        { newCol("mediumint", 3); }
@@ -162,12 +171,20 @@ Nums: TinyInt SizeOption1 NumOptions          { newCol("tinyint", 1); }
     | Double SizeOption2 NumOptions           { newCol("double", 8); }
     | Double Precision SizeOption2 NumOptions { newCol("double", 8); }
     | Real SizeOption2 NumOptions             { newCol("real", 8); }
-Times: Date
-     | Datetime
-     | Timestamp
-     | Time
-     | Year
-Texts: Text
+Times: Date                    { newCol("date", 3); }
+     | Datetime SizeOption1    { newCol("datetime", -1); }
+     | Timestamp SizeOption1   { newCol("timestamp", -1); }
+     | Time SizeOption1        { newCol("time", -1); }
+     | Year                    { newCol("year", 1); }
+Texts: Binary
+     | Varbinary
+     | TinyBlob
+     | Blob
+     | MediumBlob
+     | LongBlob
+     | Varchar
+     | TinyText
+     | Text
      | MediumText
      | LongText
 Sets: Enum
