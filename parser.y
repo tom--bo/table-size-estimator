@@ -15,13 +15,13 @@ int nowIdx = 0;
 typedef struct _col {
     char *name;
     char *coltype;
-    int size;
+    long size;
     bool hasIdx;
 } col;
 
 typedef struct _idx {
     char *idxname;
-    int size;
+    long size;
     int colId[MAXCOLS];
 } idx;
 
@@ -126,6 +126,10 @@ void newCol(char *coltype, long size) {
     return;
 }
 
+void addColName(char *name) {
+    cols[nowCol].name = name;
+}
+
 
 void yyerror(char* s) {
     printf("%s\n", s);
@@ -141,7 +145,7 @@ OptExists: /* empty */
          | IF Not Exists
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
-ColIndex: SQAnyStr ColDef { nowCol += 1; resetOpt(); }
+ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
         | IndexKey SQAnyStr IndexType KeyPart { nowIdx += 1; }
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
@@ -242,7 +246,7 @@ BtreeHash: Btree
 int yydebug = 1;
 
 int main() {
-    printf("start\n");
+    printf("Input Table definition\n");
 
     if(!yyparse()) {
         printf("successfully ended\n");
@@ -250,14 +254,17 @@ int main() {
 
     // print all array contents
     int i;
+    long sum = 0;
     for(i = 0; i<nowCol; i++) {
         printf("------\n");
         printf("%s\n", cols[i].name);
         printf("%s\n", cols[i].coltype);
-        printf("%d\n", cols[i].size);
+        printf("%ld\n", cols[i].size);
         printf("%s\n", (cols[i].hasIdx ? "true": "false"));
+        sum += cols[i].size;
     }
 
-    // calcurate table size
+    printf("------\n\n");
+    printf("1 row size = %ld bytes.\n", sum);
     return 0;
 }

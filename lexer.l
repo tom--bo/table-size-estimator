@@ -86,8 +86,8 @@
 "zerofill"       { yylval = yytext; return Zerofill; }
 "null"           { yylval = yytext; return Snull; }
 
-[a-z]+[a-z0-9]*        { yylval = yytext; return SQAnyStr; }
-"`"[a-z]+[a-z0-9]*"`"  { yylval = yytext; return AnyStr; }
+[a-z]+[a-z0-9]*        { yylval = strdup(yytext); return SQAnyStr; }
+"`"[a-z]+[a-z0-9]*"`"  { yylval = strdup(yytext); return AnyStr; }
 "/*"[a-z0-9 ]*"*/"   {}
 "\n"|" "|"\t"        {}
 
