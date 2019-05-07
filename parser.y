@@ -17,6 +17,7 @@ typedef struct _col {
     char *coltype;
     long size;
     bool hasIdx;
+    bool hasPk;
 } col;
 
 typedef struct _idx {
@@ -52,9 +53,12 @@ void resetOpt() {
 long calcSize(char *str, int opt1, int opt2) {
     long ret = 0;
     if(!strncmp(str,"dec",strlen(str)) || !strncmp(str,"decimal",strlen(str)) || !strncmp(str,"numeric",strlen(str))) {
-        ret += (opt1/9)*4 + (opt2/9)*4;
-        int rem1 = opt1%9;
-        int rem2 = opt2%9;
+        long intpart = opt1 - opt2;
+        long fracpart = opt2;
+
+        ret += (intpart/9)*4 + (fracpart/9)*4;
+        int rem1 = intpart%9;
+        int rem2 = fracpart%9;
         ret += (rem1+1)/2 + (rem2+1)/2;
     } else if(!strncmp(str,"float",strlen(str))) {
         if(opt1 <= 24) {
@@ -153,7 +157,7 @@ ColDefOptions: /* empty */
              | ColDefOptions DefaultOption
              | ColDefOptions AutoIncrement
              | ColDefOptions UniquKey { cols[nowCol].hasIdx = true; }
-             | ColDefOptions PrimaryKey {}
+             | ColDefOptions PrimaryKey { cols[nowCol].hasPk = true; }
              | ColDefOptions Comment SQAnyStr
              | ColDefOptions ColumnFormat ColumnFormatOption
              | ColDefOptions Storage StorageOption
@@ -257,10 +261,11 @@ int main() {
     long sum = 0;
     for(i = 0; i<nowCol; i++) {
         printf("------\n");
-        printf("%s\n", cols[i].name);
-        printf("%s\n", cols[i].coltype);
-        printf("%ld\n", cols[i].size);
-        printf("%s\n", (cols[i].hasIdx ? "true": "false"));
+        printf("Name:   %s\n", cols[i].name);
+        printf("Type:   %s\n", cols[i].coltype);
+        printf("Size:   %ld\n", cols[i].size);
+        printf("PK? :   %s\n", (cols[i].hasPk ? "true": "false"));
+        printf("Index?: %s\n", (cols[i].hasIdx ? "true": "false"));
         sum += cols[i].size;
     }
 
