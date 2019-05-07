@@ -18,6 +18,7 @@ typedef struct _col {
     long size;
     bool hasIdx;
     bool hasPk;
+    bool isNull;
 } col;
 
 typedef struct _idx {
@@ -117,7 +118,9 @@ void newCol(char *coltype, long size) {
     col c;
     c.name = "";
     c.coltype = coltype;
+    c.hasPk = false;
     c.hasIdx = false;
+    c.isNull = false;
 
     if(size == -1) {
         c.size = calcSize(coltype, opt1, opt2);
@@ -150,7 +153,7 @@ OptExists: /* empty */
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
 ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
-        | IndexKey SQAnyStr IndexType KeyPart { nowIdx += 1; }
+        | IndexKey OptSQAnyStr IndexType LPar KeyParts RPar { nowIdx += 1; }
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
              | ColDefOptions NullOrNot
@@ -165,8 +168,8 @@ ColDefOptions: /* empty */
 ColumnFormatOption: ColumnFormat 
 DefaultOption: Default DefaultVal
 DefaultVal: SQAnyStr {}
-NullOrNot: Not Snull
-         | Snull
+NullOrNot: Not Snull { cols[nowCol].isNull = false; }
+         | Snull { cols[nowCol].isNull = true; }
 UniquKey: Unique
         | Unique Key
 PrimaryKey: Primary
@@ -236,10 +239,18 @@ CollateOptions: /* empty */
 NumOptions: /* empty */
           | NumOptions Unsigned
           | NumOptions Zerofill
-KeyPart: SQAnyStr LPar IntNum RPar AscDesc
-AscDesc: Asc
-       | Desc
-IndexType: Using BtreeHash
+OptSQAnyStr: /* empty */
+           | SQAnyStr
+KeyParts: KeyPart
+        | KeyParts Comma KeyPart
+KeyPart: SQAnyStr OptSize OptAscDesc
+OptSize: /* empty */
+       | LPar IntNum RPar
+OptAscDesc: /* empty */
+          | Asc
+          | Desc
+IndexType: /* empty */
+         | Using BtreeHash
 BtreeHash: Btree
          | Hash
 
@@ -261,11 +272,12 @@ int main() {
     long sum = 0;
     for(i = 0; i<nowCol; i++) {
         printf("------\n");
-        printf("Name:   %s\n", cols[i].name);
-        printf("Type:   %s\n", cols[i].coltype);
-        printf("Size:   %ld\n", cols[i].size);
-        printf("PK? :   %s\n", (cols[i].hasPk ? "true": "false"));
-        printf("Index?: %s\n", (cols[i].hasIdx ? "true": "false"));
+        printf("Name:    %s\n", cols[i].name);
+        printf("Type:    %s\n", cols[i].coltype);
+        printf("Size:    %ld\n", cols[i].size);
+        printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
+        printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
+        printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
         sum += cols[i].size;
     }
 
