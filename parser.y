@@ -45,7 +45,6 @@ void addColName(char *name) {
     cols[nowCol].name = name;
 }
 
-
 void yyerror(char* s) {
     printf("%s\n", s);
 }
@@ -161,8 +160,6 @@ IndexType: /* empty */
          | Using BtreeHash
 BtreeHash: Btree
          | Hash
-
-
 %%
 
 #include <stdio.h>
