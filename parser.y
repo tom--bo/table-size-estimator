@@ -4,28 +4,11 @@
 #include <stdbool.h>
 #include <string.h>
 #include "yystype.h"
+#include "calc.h"
 
 // #define YYDEBUG 1
-const int MAXCOLS = 100;
-const int MAXIDXS = 100;
 int nowCol = 0;
 int nowIdx = 0;
-
-// define node
-typedef struct _col {
-    char *name;
-    char *coltype;
-    long size;
-    bool hasIdx;
-    bool hasPk;
-    bool isNull;
-} col;
-
-typedef struct _idx {
-    char *idxname;
-    long size;
-    int colId[MAXCOLS];
-} idx;
 
 // define nodes array
 col cols[MAXCOLS] = {};
@@ -34,84 +17,9 @@ idx idxs[MAXIDXS] = {};
 long opt1 = -1;
 long opt2 = -1;
 
-long atoi(char *str) {
-    long ans = 0;
-    int len = strlen(str);
-    int i;
-    long j = 1;
-    for(i = len-1; i>=0; i--) {
-        ans += (str[i] - '0') * j;
-        j *= 10;
-    }
-    return ans;
-}
-
 void resetOpt() {
     opt1 = -1;
     opt2 = -1;
-}
-
-long calcSize(char *str, int opt1, int opt2) {
-    long ret = 0;
-    if(!strncmp(str,"dec",strlen(str)) || !strncmp(str,"decimal",strlen(str)) || !strncmp(str,"numeric",strlen(str))) {
-        long intpart = opt1 - opt2;
-        long fracpart = opt2;
-
-        ret += (intpart/9)*4 + (fracpart/9)*4;
-        int rem1 = intpart%9;
-        int rem2 = fracpart%9;
-        ret += (rem1+1)/2 + (rem2+1)/2;
-    } else if(!strncmp(str,"float",strlen(str))) {
-        if(opt1 <= 24) {
-            ret = 4;
-        } else {
-            ret = 8;
-        }
-    } else if(!strncmp(str,"bit",strlen(str))) {
-        ret = (opt1+7)/8;
-    } else if(!strncmp(str,"datetime",strlen(str))) {
-        ret = 5;
-        if(opt1 != -1) {
-            ret += opt1 / 2;
-        }
-    } else if(!strncmp(str,"timestamp",strlen(str))) {
-        ret = 4;
-        if(opt1 != -1) {
-            ret += opt1 / 2;
-        }
-    } else if(!strncmp(str,"time",strlen(str))) {
-        ret = 3;
-        if(opt1 != -1) {
-            ret += opt1 / 2;
-        }
-    } else if(!strncmp(str,"blob",strlen(str))) {
-        ret = 65537;
-        if(opt1 != -1) {
-            ret = opt1;
-        }
-    } else if(!strncmp(str,"char",strlen(str))) {
-        ret = opt1 * 4;
-    } else if(!strncmp(str,"varchar",strlen(str))) {
-        if(opt1 * 4 < 255) {
-            ret = opt1 * 4 + 1;
-        } else {
-            ret = opt1 * 4 + 2;
-        }
-    } else if(!strncmp(str,"binary",strlen(str))) {
-        ret = opt1;
-    } else if(!strncmp(str,"varbinary",strlen(str))) {
-        if(opt1 < 255) {
-            ret = opt1 + 1;
-        } else {
-            ret = opt1 + 2;
-        }
-    } else if(!strncmp(str,"text",strlen(str))) {
-        ret = 65535+3;
-        if(opt1 != -1) {
-            ret = opt1*4+3;
-        }
-    }
-    return ret;
 }
 
 void newCol(char *coltype, long size) {
@@ -260,6 +168,24 @@ BtreeHash: Btree
 #include <stdio.h>
 int yydebug = 1;
 
+// print all array contents
+long calcTotalSize(bool debug) {
+    long sum = 0;
+    for(int i = 0; i<nowCol; i++) {
+        if(debug) {
+            printf("------\n");
+            printf("Name:    %s\n", cols[i].name);
+            printf("Type:    %s\n", cols[i].coltype);
+            printf("Size:    %ld\n", cols[i].size);
+            printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
+            printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
+            printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
+        }
+        sum += cols[i].size;
+    }
+    return sum;
+}
+
 int main() {
     printf("Input Table definition\n");
 
@@ -267,19 +193,7 @@ int main() {
         printf("successfully ended\n");
     }
 
-    // print all array contents
-    int i;
-    long sum = 0;
-    for(i = 0; i<nowCol; i++) {
-        printf("------\n");
-        printf("Name:    %s\n", cols[i].name);
-        printf("Type:    %s\n", cols[i].coltype);
-        printf("Size:    %ld\n", cols[i].size);
-        printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
-        printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
-        printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
-        sum += cols[i].size;
-    }
+    long sum = calcTotalSize(true); // debug = true
 
     printf("------\n\n");
     printf("1 row size = %ld bytes.\n", sum);

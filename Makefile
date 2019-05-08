@@ -9,7 +9,8 @@ parse:
 
 clean:
 	rm -f lexer.yy.h parser.tab.h
-	rm -f *.c
+	rm -f *yy.c
+	rm -f *tab.c
 	rm -f *.output
 	rm -f p parser
 	rm -f a.out
