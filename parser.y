@@ -9,6 +9,7 @@
 // #define YYDEBUG 1
 int nowCol = 0;
 int nowIdx = 0;
+int nowIdxCol = 0;
 
 // define nodes array
 col cols[MAXCOLS] = {};
@@ -45,6 +46,27 @@ void addColName(char *name) {
     cols[nowCol].name = name;
 }
 
+void addIdxCol(char *name, char *s, char *isAsc) {
+    if(nowIdxCol == 0) {
+        idx ii;
+        ii.size = 0;
+        idxs[nowIdx] = ii;
+    }
+    idxCol ic;
+    ic.prefixSize = atol(s);
+    ic.colName = name;
+    ic.prefixSize = atol(s);
+    ic.isAsc = (strcmp(isAsc, "asc")) == 0 ? true:false;
+
+    idxs[nowIdx].idxCols[nowIdxCol] = ic;
+    nowIdxCol += 1;
+    idxs[nowIdx].idxColsLen = nowIdxCol;
+}
+
+void addIdxName(char *name) {
+    idxs[nowIdx].idxName = name;
+}
+
 void yyerror(char* s) {
     printf("%s\n", s);
 }
@@ -60,13 +82,13 @@ OptExists: /* empty */
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
 ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
-        | IndexKey OptSQAnyStr IndexType LPar KeyParts RPar { nowIdx += 1; }
+        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar { addIdxName($2); nowIdx += 1; nowIdxCol = 0; }
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
              | ColDefOptions NullOrNot
              | ColDefOptions DefaultOption
              | ColDefOptions AutoIncrement
-             | ColDefOptions UniquKey { cols[nowCol].hasIdx = true; }
+             | ColDefOptions UniqueKey { cols[nowCol].hasIdx = true; }
              | ColDefOptions PrimaryKey { cols[nowCol].hasPk = true; }
              | ColDefOptions Comment SQAnyStr
              | ColDefOptions ColumnFormat ColumnFormatOption
@@ -77,8 +99,8 @@ DefaultOption: Default DefaultVal
 DefaultVal: SQAnyStr {}
 NullOrNot: Not Snull { cols[nowCol].isNull = false; }
          | Snull { cols[nowCol].isNull = true; }
-UniquKey: Unique
-        | Unique Key
+UniqueKey: Unique
+         | Unique Key
 PrimaryKey: Primary
           | Primary Key
 CollateOption: Collate CollationType
@@ -92,6 +114,8 @@ StorageOption: Disk
              | Memory
 IndexKey: Index
         | Key
+        | Primary Key
+        | Unique Key
 DataType: Bits
         | Nums
         | Times
@@ -133,12 +157,12 @@ Texts: Binary           { newCol("binary", -1); }
 Sets: Enum { newCol("enum", 2); }
     | Set  { newCol("set", 2); }
 SizeOption1: /* empty */
-           | LPar IntNum RPar { opt1 = atoi($2); }
+           | LPar IntNum RPar { opt1 = atol($2); }
 SizeOption2: /* empty */
-           | LPar IntNum Comma IntNum RPar { opt1 = atoi($2); opt2 = atoi($4); }
+           | LPar IntNum Comma IntNum RPar { opt1 = atol($2); opt2 = atol($4); }
 SizeOption1or2: /* empty */
-              | LPar IntNum RPar { opt1 = atoi($2); }
-              | LPar IntNum Comma IntNum RPar { opt1 = atoi($2); opt2 = atoi($4); }
+              | LPar IntNum RPar { opt1 = atol($2); }
+              | LPar IntNum Comma IntNum RPar { opt1 = atol($2); opt2 = atol($4); }
 CharacterSetOptions: /* empty */
                    | Character Set SQAnyStr CollateOptions
 CollateOptions: /* empty */
@@ -150,13 +174,13 @@ OptSQAnyStr: /* empty */
            | SQAnyStr
 KeyParts: KeyPart
         | KeyParts Comma KeyPart
-KeyPart: SQAnyStr OptSize OptAscDesc
-OptSize: /* empty */
-       | LPar IntNum RPar
-OptAscDesc: /* empty */
-          | Asc
-          | Desc
-IndexType: /* empty */
+KeyPart: SQAnyStr OptSize OptAscDesc { addIdxCol($1, $2, $3); }
+OptSize: /* empty */ { $$ = "0"; }
+       | LPar IntNum RPar { $$ = $2; }
+OptAscDesc: /* empty */ { $$ = "asc"; }
+          | Asc  { $$ = "asc"; }
+          | Desc { $$ = "desc"; }
+OptIndexType: /* empty */
          | Using BtreeHash
 BtreeHash: Btree
          | Hash
@@ -179,6 +203,16 @@ long calcTotalSize(bool debug) {
             printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
         }
         sum += cols[i].size;
+    }
+    for(int i = 0; i<nowIdx; i++) {
+        if(debug) {
+            printf("------\n");
+            printf("Name:    %s\n", idxs[i].idxName);
+            printf("Size:    %ld\n", idxs[i].size);
+            for(int j = 0; j<idxs[i].idxColsLen; j++) {
+                printf("colName: %s\n", idxs[i].idxCols[j].colName);
+            }
+        }
     }
     return sum;
 }

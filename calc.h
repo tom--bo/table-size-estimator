@@ -17,14 +17,23 @@ typedef struct _col {
     bool isNull;
 } col;
 
+// define cols in index
+typedef struct _idxCol {
+    char *colName;
+    long prefixSize;
+    bool isAsc;
+} idxCol;
+
 // define index node
 typedef struct _idx {
-    char *idxname;
+    char *idxName;
     long size;
-    int colId[MAXCOLS];
+    int idxColsLen;
+    idxCol idxCols[MAXCOLS];
 } idx;
 
-long atoi(char *str);
+
+long atol(char *str);
 long calcSize(char *str, int opt1, int opt2);
 
 #endif //TABLE_SIZE_ESTIMATOR_CALC_H
