@@ -1,6 +1,6 @@
 #include <string.h>
 
-long atol(char *str) {
+long atolong(char *str) {
     long ans = 0;
     int len = strlen(str);
     int i;

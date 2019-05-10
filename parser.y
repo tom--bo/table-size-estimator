@@ -1,6 +1,7 @@
 %token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement BigInt Binary Bit Blob Bool Boolean Btree Char Character Collate ColumnFormat Comment Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText MediumBlob MediumInt MediumText Memory National Not Snull Numeric Precision Primary Real Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Error
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "yystype.h"
@@ -42,8 +43,20 @@ void newCol(char *coltype, long size) {
     return;
 }
 
+// extract `` quote from name if exists
+char *extractBackQuote(char *s) {
+    if(s[0] == '`' && s[strlen(s)-1] == '`') {
+        long l = strlen(s);
+        char *t = (char*)malloc(sizeof(char)*(l-1));;
+        strncpy(t, s+1, l-2);
+        t[l-2] = '\0';
+        return t;
+    }
+    return s;
+}
+
 void addColName(char *name) {
-    cols[nowCol].name = name;
+    cols[nowCol].name = extractBackQuote(name);
 }
 
 void addIdxCol(char *name, char *s, char *isAsc) {
@@ -53,9 +66,9 @@ void addIdxCol(char *name, char *s, char *isAsc) {
         idxs[nowIdx] = ii;
     }
     idxCol ic;
-    ic.prefixSize = atol(s);
-    ic.colName = name;
-    ic.prefixSize = atol(s);
+    ic.prefixSize = atolong(s);
+    ic.colName = extractBackQuote(name);
+    ic.prefixSize = atolong(s);
     ic.isAsc = (strcmp(isAsc, "asc")) == 0 ? true:false;
 
     idxs[nowIdx].idxCols[nowIdxCol] = ic;
@@ -64,7 +77,7 @@ void addIdxCol(char *name, char *s, char *isAsc) {
 }
 
 void addIdxName(char *name) {
-    idxs[nowIdx].idxName = name;
+    idxs[nowIdx].idxName = extractBackQuote(name);
 }
 
 void yyerror(char* s) {
@@ -85,7 +98,7 @@ ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
         | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar { addIdxName($2); nowIdx += 1; nowIdxCol = 0; }
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
-             | ColDefOptions NullOrNot
+             | ColDefOptions Not Snull { cols[nowCol].isNull = false; }
              | ColDefOptions DefaultOption
              | ColDefOptions AutoIncrement
              | ColDefOptions UniqueKey { cols[nowCol].hasIdx = true; }
@@ -95,10 +108,9 @@ ColDefOptions: /* empty */
              | ColDefOptions Storage StorageOption
 
 ColumnFormatOption: ColumnFormat 
-DefaultOption: Default DefaultVal
+DefaultOption: Default Snull { cols[nowCol].isNull = true; }
+             | Default DefaultVal
 DefaultVal: SQAnyStr {}
-NullOrNot: Not Snull { cols[nowCol].isNull = false; }
-         | Snull { cols[nowCol].isNull = true; }
 UniqueKey: Unique
          | Unique Key
 PrimaryKey: Primary
@@ -157,12 +169,12 @@ Texts: Binary           { newCol("binary", -1); }
 Sets: Enum { newCol("enum", 2); }
     | Set  { newCol("set", 2); }
 SizeOption1: /* empty */
-           | LPar IntNum RPar { opt1 = atol($2); }
+           | LPar IntNum RPar { opt1 = atolong($2); }
 SizeOption2: /* empty */
-           | LPar IntNum Comma IntNum RPar { opt1 = atol($2); opt2 = atol($4); }
+           | LPar IntNum Comma IntNum RPar { opt1 = atolong($2); opt2 = atolong($4); }
 SizeOption1or2: /* empty */
-              | LPar IntNum RPar { opt1 = atol($2); }
-              | LPar IntNum Comma IntNum RPar { opt1 = atol($2); opt2 = atol($4); }
+              | LPar IntNum RPar { opt1 = atolong($2); }
+              | LPar IntNum Comma IntNum RPar { opt1 = atolong($2); opt2 = atolong($4); }
 CharacterSetOptions: /* empty */
                    | Character Set SQAnyStr CollateOptions
 CollateOptions: /* empty */
@@ -170,8 +182,8 @@ CollateOptions: /* empty */
 NumOptions: /* empty */
           | NumOptions Unsigned
           | NumOptions Zerofill
-OptSQAnyStr: /* empty */
-           | SQAnyStr
+OptSQAnyStr: /* empty */ { $$ = "(NONE)"; }
+           | SQAnyStr { $$ = $1; }
 KeyParts: KeyPart
         | KeyParts Comma KeyPart
 KeyPart: SQAnyStr OptSize OptAscDesc { addIdxCol($1, $2, $3); }
@@ -192,6 +204,7 @@ int yydebug = 1;
 // print all array contents
 long calcTotalSize(bool debug) {
     long sum = 0;
+    printf("\n ====== COLUMN ======\n");
     for(int i = 0; i<nowCol; i++) {
         if(debug) {
             printf("------\n");
@@ -204,6 +217,7 @@ long calcTotalSize(bool debug) {
         }
         sum += cols[i].size;
     }
+    printf("\n ====== INDEX ======\n");
     for(int i = 0; i<nowIdx; i++) {
         if(debug) {
             printf("------\n");
