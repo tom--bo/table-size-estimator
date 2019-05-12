@@ -27,6 +27,7 @@
 "boolean"        { yylval = yytext; return Boolean; }
 "btree"          { yylval = yytext; return Btree; }
 "char"           { yylval = yytext; return Char; }
+"charset"        { yylval = yytext; return Charset; }
 "character"      { yylval = yytext; return Character; }
 "checksum"       { yylval = yytext; return Checksum; }
 "collate"        { yylval = yytext; return Collate; }
@@ -99,7 +100,7 @@
 "zlib"           { yylval = yytext; return Zlib; }
 "null"           { yylval = yytext; return Snull; }
 
-['`]?[a-z]+[a-z0-9]*['`]? { yylval = strdup(yytext); return SQAnyStr; }
+['`]?[a-z]+[a-z0-9_\-]*['`]? { yylval = strdup(yytext); return SQAnyStr; }
 "/*"[a-z0-9 ]*"*/"   {}
 "\n"|" "|"\t"        {}
 
