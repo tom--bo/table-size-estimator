@@ -236,6 +236,15 @@ RowFormatOptions: Default
 #include <stdio.h>
 int yydebug = 1;
 
+long getColSizeByName(char *name) {
+    for(int i = 0; i < nowCol; i++) {
+        if(strcmp(name, cols[i].name) == 0) {
+            return cols[i].size;
+        }
+    }
+    return 0;
+}
+
 // print all array contents
 long calcTotalSize(bool debug) {
     long sum = 0;
@@ -254,13 +263,15 @@ long calcTotalSize(bool debug) {
     }
     printf("\n ====== INDEX ======\n");
     for(int i = 0; i<nowIdx; i++) {
+        for(int j = 0; j<idxs[i].idxColsLen; j++) {
+            printf("colName: %s\n", idxs[i].idxCols[j].colName);
+            idxs[i].size += getColSizeByName(idxs[i].idxCols[j].colName);
+        }
+        sum += idxs[i].size;
         if(debug) {
             printf("------\n");
             printf("Name:    %s\n", idxs[i].idxName);
             printf("Size:    %ld\n", idxs[i].size);
-            for(int j = 0; j<idxs[i].idxColsLen; j++) {
-                printf("colName: %s\n", idxs[i].idxCols[j].colName);
-            }
         }
     }
     return sum;
