@@ -287,6 +287,10 @@ int main() {
     long sum = calcTotalSize(true); // debug = true
 
     printf("------\n\n");
-    printf("1 row size = %ld bytes.\n", sum);
+    printf("1 row size = %ld bytes", sum);
+    if(sum >= 1024) {
+        printf("(%ld KB)", sum/1024);
+    }
+    printf(".\n");
     return 0;
 }
