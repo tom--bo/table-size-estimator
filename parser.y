@@ -1,31 +1,16 @@
-%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement BigInt Binary Bit Blob Bool Boolean Btree Char Character Collate ColumnFormat Comment Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText MediumBlob MediumInt MediumText Memory National Not Snull Numeric Precision Primary Real Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Error
+%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Char Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 MediumBlob MediumInt MediumText Memory National None Not Snull Numeric Precision Primary Real Redundant RowFormat Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
 %{
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include "yystype.h"
+#include "calc.h"
 
 // #define YYDEBUG 1
-const int MAXCOLS = 100;
-const int MAXIDXS = 100;
 int nowCol = 0;
 int nowIdx = 0;
-
-// define node
-typedef struct _col {
-    char *name;
-    char *coltype;
-    long size;
-    bool hasIdx;
-    bool hasPk;
-    bool isNull;
-} col;
-
-typedef struct _idx {
-    char *idxname;
-    long size;
-    int colId[MAXCOLS];
-} idx;
+int nowIdxCol = 0;
 
 // define nodes array
 col cols[MAXCOLS] = {};
@@ -34,84 +19,9 @@ idx idxs[MAXIDXS] = {};
 long opt1 = -1;
 long opt2 = -1;
 
-long atoi(char *str) {
-    long ans = 0;
-    int len = strlen(str);
-    int i;
-    long j = 1;
-    for(i = len-1; i>=0; i--) {
-        ans += (str[i] - '0') * j;
-        j *= 10;
-    }
-    return ans;
-}
-
 void resetOpt() {
     opt1 = -1;
     opt2 = -1;
-}
-
-long calcSize(char *str, int opt1, int opt2) {
-    long ret = 0;
-    if(!strncmp(str,"dec",strlen(str)) || !strncmp(str,"decimal",strlen(str)) || !strncmp(str,"numeric",strlen(str))) {
-        long intpart = opt1 - opt2;
-        long fracpart = opt2;
-
-        ret += (intpart/9)*4 + (fracpart/9)*4;
-        int rem1 = intpart%9;
-        int rem2 = fracpart%9;
-        ret += (rem1+1)/2 + (rem2+1)/2;
-    } else if(!strncmp(str,"float",strlen(str))) {
-        if(opt1 <= 24) {
-            ret = 4;
-        } else {
-            ret = 8;
-        }
-    } else if(!strncmp(str,"bit",strlen(str))) {
-        ret = (opt1+7)/8;
-    } else if(!strncmp(str,"datetime",strlen(str))) {
-        ret = 5;
-        if(opt1 != -1) {
-            ret += opt1 / 2;
-        }
-    } else if(!strncmp(str,"timestamp",strlen(str))) {
-        ret = 4;
-        if(opt1 != -1) {
-            ret += opt1 / 2;
-        }
-    } else if(!strncmp(str,"time",strlen(str))) {
-        ret = 3;
-        if(opt1 != -1) {
-            ret += opt1 / 2;
-        }
-    } else if(!strncmp(str,"blob",strlen(str))) {
-        ret = 65537;
-        if(opt1 != -1) {
-            ret = opt1;
-        }
-    } else if(!strncmp(str,"char",strlen(str))) {
-        ret = opt1 * 4;
-    } else if(!strncmp(str,"varchar",strlen(str))) {
-        if(opt1 * 4 < 255) {
-            ret = opt1 * 4 + 1;
-        } else {
-            ret = opt1 * 4 + 2;
-        }
-    } else if(!strncmp(str,"binary",strlen(str))) {
-        ret = opt1;
-    } else if(!strncmp(str,"varbinary",strlen(str))) {
-        if(opt1 < 255) {
-            ret = opt1 + 1;
-        } else {
-            ret = opt1 + 2;
-        }
-    } else if(!strncmp(str,"text",strlen(str))) {
-        ret = 65535+3;
-        if(opt1 != -1) {
-            ret = opt1*4+3;
-        }
-    }
-    return ret;
 }
 
 void newCol(char *coltype, long size) {
@@ -134,9 +44,29 @@ void newCol(char *coltype, long size) {
 }
 
 void addColName(char *name) {
-    cols[nowCol].name = name;
+    cols[nowCol].name = extractBackQuote(name);
 }
 
+void addIdxCol(char *name, char *s, char *isAsc) {
+    if(nowIdxCol == 0) {
+        idx ii;
+        ii.size = 0;
+        idxs[nowIdx] = ii;
+    }
+    idxCol ic;
+    ic.prefixSize = atolong(s);
+    ic.colName = extractBackQuote(name);
+    ic.prefixSize = atolong(s);
+    ic.isAsc = (strcmp(isAsc, "asc")) == 0 ? true:false;
+
+    idxs[nowIdx].idxCols[nowIdxCol] = ic;
+    nowIdxCol += 1;
+    idxs[nowIdx].idxColsLen = nowIdxCol;
+}
+
+void addIdxName(char *name) {
+    idxs[nowIdx].idxName = extractBackQuote(name);
+}
 
 void yyerror(char* s) {
     printf("%s\n", s);
@@ -145,7 +75,7 @@ void yyerror(char* s) {
 %%
 
 Expression: CreateSQL {}
-CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar Semi
+CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar TableOptions Semi
 OptTemp: /* empty */
        | Temporary
 OptExists: /* empty */
@@ -153,28 +83,28 @@ OptExists: /* empty */
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
 ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
-        | IndexKey OptSQAnyStr IndexType LPar KeyParts RPar { nowIdx += 1; }
+        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar { addIdxName($2); nowIdx += 1; nowIdxCol = 0; }
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
-             | ColDefOptions NullOrNot
+             | ColDefOptions Not Snull { cols[nowCol].isNull = false; }
              | ColDefOptions DefaultOption
              | ColDefOptions AutoIncrement
-             | ColDefOptions UniquKey { cols[nowCol].hasIdx = true; }
+             | ColDefOptions UniqueKey { cols[nowCol].hasIdx = true; }
              | ColDefOptions PrimaryKey { cols[nowCol].hasPk = true; }
-             | ColDefOptions Comment SQAnyStr
+             | ColDefOptions Comments
              | ColDefOptions ColumnFormat ColumnFormatOption
              | ColDefOptions Storage StorageOption
 
 ColumnFormatOption: ColumnFormat 
-DefaultOption: Default DefaultVal
+DefaultOption: Default Snull { cols[nowCol].isNull = true; }
+             | Default DefaultVal
 DefaultVal: SQAnyStr {}
-NullOrNot: Not Snull { cols[nowCol].isNull = false; }
-         | Snull { cols[nowCol].isNull = true; }
-UniquKey: Unique
-        | Unique Key
+UniqueKey: Unique
+         | Unique Key
 PrimaryKey: Primary
           | Primary Key
 CollateOption: Collate CollationType
+             | Collate Equal CollationType
 CollationType: Utf8
              | Utf8mb4
              | SQAnyStr
@@ -185,6 +115,8 @@ StorageOption: Disk
              | Memory
 IndexKey: Index
         | Key
+        | Primary Key
+        | Unique Key
 DataType: Bits
         | Nums
         | Times
@@ -226,39 +158,111 @@ Texts: Binary           { newCol("binary", -1); }
 Sets: Enum { newCol("enum", 2); }
     | Set  { newCol("set", 2); }
 SizeOption1: /* empty */
-           | LPar IntNum RPar { opt1 = atoi($2); }
+           | LPar IntNum RPar { opt1 = atolong($2); }
 SizeOption2: /* empty */
-           | LPar IntNum Comma IntNum RPar { opt1 = atoi($2); opt2 = atoi($4); }
+           | LPar IntNum Comma IntNum RPar { opt1 = atolong($2); opt2 = atolong($4); }
 SizeOption1or2: /* empty */
-              | LPar IntNum RPar { opt1 = atoi($2); }
-              | LPar IntNum Comma IntNum RPar { opt1 = atoi($2); opt2 = atoi($4); }
+              | LPar IntNum RPar { opt1 = atolong($2); }
+              | LPar IntNum Comma IntNum RPar { opt1 = atolong($2); opt2 = atolong($4); }
 CharacterSetOptions: /* empty */
                    | Character Set SQAnyStr CollateOptions
 CollateOptions: /* empty */
               | CollateOption
+Comments: Comment Equal SQAnyStr
+        | Comment SQAnyStr
 NumOptions: /* empty */
           | NumOptions Unsigned
           | NumOptions Zerofill
-OptSQAnyStr: /* empty */
-           | SQAnyStr
+OptSQAnyStr: /* empty */ { $$ = "(NONE)"; }
+           | SQAnyStr { $$ = $1; }
 KeyParts: KeyPart
         | KeyParts Comma KeyPart
-KeyPart: SQAnyStr OptSize OptAscDesc
-OptSize: /* empty */
-       | LPar IntNum RPar
-OptAscDesc: /* empty */
-          | Asc
-          | Desc
-IndexType: /* empty */
+KeyPart: SQAnyStr OptSize OptAscDesc { addIdxCol($1, $2, $3); }
+OptSize: /* empty */ { $$ = "0"; }
+       | LPar IntNum RPar { $$ = $2; }
+OptAscDesc: /* empty */ { $$ = "asc"; }
+          | Asc  { $$ = "asc"; }
+          | Desc { $$ = "desc"; }
+OptIndexType: /* empty */
          | Using BtreeHash
 BtreeHash: Btree
          | Hash
+TableOptions: /* empty */
+           | TableOptions AutoIncrements
+           | TableOptions AvgRowLengths
+           | TableOptions DefaultCharSets
+           | TableOptions Checksums
+           | TableOptions DefaultCollations
+           | TableOptions Comments
+           | TableOptions Compressions
+           | TableOptions Encryptions
+           | TableOptions Engines
+           | TableOptions RowFormats
 
-
+AutoIncrements: AutoIncrement IntNum
+              | AutoIncrement Equal IntNum
+AvgRowLengths: AvgRowLength IntNum
+             | AvgRowLength Equal IntNum
+DefaultCharSets: Default Character Set SQAnyStr
+              | Default Character Set Equal SQAnyStr
+              | Character Set SQAnyStr
+              | Character Set Equal SQAnyStr
+Checksums: Checksum ZeroOne
+         | Checksum Equal ZeroOne
+ZeroOne: IntNum { /* TODO: only 0 or 1*/ }
+DefaultCollations: Default CollateOption
+                 | CollateOption
+Compressions: Compression Equal CompressOptions
+            | Compression CompressOptions
+CompressOptions: Zlib
+               | Lz4
+               | None
+Encryptions: Encryption Equal SQAnyStr { /* Todo: only 'Y' or 'N' */ }
+           | Encryption SQAnyStr { /* Todo: only 'Y' or 'N' */ }
+Engines: Engine Equal SQAnyStr
+       | Engine SQAnyStr
+RowFormats: RowFormat Equal RowFormatOptions
+          | RowFormat RowFormatOptions
+RowFormatOptions: Default
+                | Dynamic
+                | Fixed
+                | Compressed
+                | Redundant
+                | Compact
 %%
 
 #include <stdio.h>
 int yydebug = 1;
+
+// print all array contents
+long calcTotalSize(bool debug) {
+    long sum = 0;
+    printf("\n ====== COLUMN ======\n");
+    for(int i = 0; i<nowCol; i++) {
+        if(debug) {
+            printf("------\n");
+            printf("Name:    %s\n", cols[i].name);
+            printf("Type:    %s\n", cols[i].coltype);
+            printf("Size:    %ld\n", cols[i].size);
+            printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
+            printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
+            printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
+        }
+        sum += cols[i].size;
+    }
+    printf("\n ====== INDEX ======\n");
+    for(int i = 0; i<nowIdx; i++) {
+        if(debug) {
+            printf("------\n");
+            printf("Name:    %s\n", idxs[i].idxName);
+            printf("Size:    %ld\n", idxs[i].size);
+            for(int j = 0; j<idxs[i].idxColsLen; j++) {
+                printf("colName: %s\n", idxs[i].idxCols[j].colName);
+            }
+        }
+    }
+    return sum;
+}
 
 int main() {
     printf("Input Table definition\n");
@@ -267,19 +271,7 @@ int main() {
         printf("successfully ended\n");
     }
 
-    // print all array contents
-    int i;
-    long sum = 0;
-    for(i = 0; i<nowCol; i++) {
-        printf("------\n");
-        printf("Name:    %s\n", cols[i].name);
-        printf("Type:    %s\n", cols[i].coltype);
-        printf("Size:    %ld\n", cols[i].size);
-        printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
-        printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
-        printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
-        sum += cols[i].size;
-    }
+    long sum = calcTotalSize(true); // debug = true
 
     printf("------\n\n");
     printf("1 row size = %ld bytes.\n", sum);
