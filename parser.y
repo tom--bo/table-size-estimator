@@ -1,4 +1,4 @@
-%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement BigInt Binary Bit Blob Bool Boolean Btree Char Character Collate ColumnFormat Comment Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText MediumBlob MediumInt MediumText Memory National Not Snull Numeric Precision Primary Real Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Error
+%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Char Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 MediumBlob MediumInt MediumText Memory National None Not Snull Numeric Precision Primary Real Redundant RowFormat Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,18 +43,6 @@ void newCol(char *coltype, long size) {
     return;
 }
 
-// extract `` quote from name if exists
-char *extractBackQuote(char *s) {
-    if(s[0] == '`' && s[strlen(s)-1] == '`') {
-        long l = strlen(s);
-        char *t = (char*)malloc(sizeof(char)*(l-1));;
-        strncpy(t, s+1, l-2);
-        t[l-2] = '\0';
-        return t;
-    }
-    return s;
-}
-
 void addColName(char *name) {
     cols[nowCol].name = extractBackQuote(name);
 }
@@ -87,7 +75,7 @@ void yyerror(char* s) {
 %%
 
 Expression: CreateSQL {}
-CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar Semi
+CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar TableOptions Semi
 OptTemp: /* empty */
        | Temporary
 OptExists: /* empty */
@@ -103,7 +91,7 @@ ColDefOptions: /* empty */
              | ColDefOptions AutoIncrement
              | ColDefOptions UniqueKey { cols[nowCol].hasIdx = true; }
              | ColDefOptions PrimaryKey { cols[nowCol].hasPk = true; }
-             | ColDefOptions Comment SQAnyStr
+             | ColDefOptions Comments
              | ColDefOptions ColumnFormat ColumnFormatOption
              | ColDefOptions Storage StorageOption
 
@@ -116,6 +104,7 @@ UniqueKey: Unique
 PrimaryKey: Primary
           | Primary Key
 CollateOption: Collate CollationType
+             | Collate Equal CollationType
 CollationType: Utf8
              | Utf8mb4
              | SQAnyStr
@@ -179,6 +168,8 @@ CharacterSetOptions: /* empty */
                    | Character Set SQAnyStr CollateOptions
 CollateOptions: /* empty */
               | CollateOption
+Comments: Comment Equal SQAnyStr
+        | Comment SQAnyStr
 NumOptions: /* empty */
           | NumOptions Unsigned
           | NumOptions Zerofill
@@ -196,6 +187,48 @@ OptIndexType: /* empty */
          | Using BtreeHash
 BtreeHash: Btree
          | Hash
+TableOptions: /* empty */
+           | TableOptions AutoIncrements
+           | TableOptions AvgRowLengths
+           | TableOptions DefaultCharSets
+           | TableOptions Checksums
+           | TableOptions DefaultCollations
+           | TableOptions Comments
+           | TableOptions Compressions
+           | TableOptions Encryptions
+           | TableOptions Engines
+           | TableOptions RowFormats
+
+AutoIncrements: AutoIncrement IntNum
+              | AutoIncrement Equal IntNum
+AvgRowLengths: AvgRowLength IntNum
+             | AvgRowLength Equal IntNum
+DefaultCharSets: Default Character Set SQAnyStr
+              | Default Character Set Equal SQAnyStr
+              | Character Set SQAnyStr
+              | Character Set Equal SQAnyStr
+Checksums: Checksum ZeroOne
+         | Checksum Equal ZeroOne
+ZeroOne: IntNum { /* TODO: only 0 or 1*/ }
+DefaultCollations: Default CollateOption
+                 | CollateOption
+Compressions: Compression Equal CompressOptions
+            | Compression CompressOptions
+CompressOptions: Zlib
+               | Lz4
+               | None
+Encryptions: Encryption Equal SQAnyStr { /* Todo: only 'Y' or 'N' */ }
+           | Encryption SQAnyStr { /* Todo: only 'Y' or 'N' */ }
+Engines: Engine Equal SQAnyStr
+       | Engine SQAnyStr
+RowFormats: RowFormat Equal RowFormatOptions
+          | RowFormat RowFormatOptions
+RowFormatOptions: Default
+                | Dynamic
+                | Fixed
+                | Compressed
+                | Redundant
+                | Compact
 %%
 
 #include <stdio.h>

@@ -13,10 +13,12 @@
 ")"              { return RPar; }
 "]"              { return BrckRPar; }
 "["              { return BrckLPar; }
+"="              { yylval = yytext; return Equal; }
 "always"         { yylval = yytext; return Always; }
 "as"             { yylval = yytext; return AS; }
 "asc"            { yylval = yytext; return Asc; }
 "auto_increment" { yylval = yytext; return AutoIncrement; }
+"avg_row_length" { yylval = yytext; return AvgRowLength; }
 "bigint"         { yylval = yytext; return BigInt; }
 "binary"         { yylval = yytext; return Binary; }
 "bit"            { yylval = yytext; return Bit; }
@@ -26,9 +28,13 @@
 "btree"          { yylval = yytext; return Btree; }
 "char"           { yylval = yytext; return Char; }
 "character"      { yylval = yytext; return Character; }
+"checksum"       { yylval = yytext; return Checksum; }
 "collate"        { yylval = yytext; return Collate; }
 "column_format"  { yylval = yytext; return ColumnFormat; }
 "comment"        { yylval = yytext; return Comment; }
+"compact"        { yylval = yytext; return Compact; }
+"compressed"     { yylval = yytext; return Compressed; }
+"compression"    { yylval = yytext; return Compression; }
 "create"         { yylval = yytext; return Create; }
 "date"           { yylval = yytext; return Date; }
 "datetime"       { yylval = yytext; return Datetime; }
@@ -39,6 +45,8 @@
 "disk"           { yylval = yytext; return Disk; }
 "double"         { yylval = yytext; return Double; }
 "dynamic"        { yylval = yytext; return Dynamic; }
+"encryption"     { yylval = yytext; return Encryption; }
+"engine"         { yylval = yytext; return Engine; }
 "enum"           { yylval = yytext; return Enum; }
 "exists"         { yylval = yytext; return Exists; }
 "fixed"          { yylval = yytext; return Fixed; }
@@ -52,16 +60,20 @@
 "key"            { yylval = yytext; return Key; }
 "longblob"       { yylval = yytext; return LongBlob; }
 "longtext"       { yylval = yytext; return LongText; }
+"lz4"            { yylval = yytext; return Lz4; }
 "mediumblob"     { yylval = yytext; return MediumBlob; }
 "mediumint"      { yylval = yytext; return MediumInt; }
 "mediumtext"     { yylval = yytext; return MediumText; }
 "memory"         { yylval = yytext; return Memory; }
 "national"       { yylval = yytext; return National; }
 "not"            { yylval = yytext; return Not; }
+"none"           { yylval = yytext; return None; }
 "numeric"        { yylval = yytext; return Numeric; }
 "precision"      { yylval = yytext; return Precision; }
 "primary"        { yylval = yytext; return Primary; }
 "real"           { yylval = yytext; return Real; }
+"redundant"      { yylval = yytext; return Redundant; }
+"row_format"     { yylval = yytext; return RowFormat; }
 "set"            { yylval = yytext; return Set; }
 "smallint"       { yylval = yytext; return SmallInt; }
 "storage"        { yylval = yytext; return Storage; }
@@ -84,9 +96,10 @@
 "virtual"        { yylval = yytext; return Virtual; }
 "year"           { yylval = yytext; return Year; }
 "zerofill"       { yylval = yytext; return Zerofill; }
+"zlib"           { yylval = yytext; return Zlib; }
 "null"           { yylval = yytext; return Snull; }
 
-[`]?[a-z]+[a-z0-9]*[`]? { yylval = strdup(yytext); return SQAnyStr; }
+['`]?[a-z]+[a-z0-9]*['`]? { yylval = strdup(yytext); return SQAnyStr; }
 "/*"[a-z0-9 ]*"*/"   {}
 "\n"|" "|"\t"        {}
 

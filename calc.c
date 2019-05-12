@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 
 long atolong(char *str) {
@@ -10,6 +11,18 @@ long atolong(char *str) {
         j *= 10;
     }
     return ans;
+}
+
+// extract `` quote from name if exists
+char *extractBackQuote(char *s) {
+    if(s[0] == '`' && s[strlen(s)-1] == '`') {
+        long l = strlen(s);
+        char *t = (char*)malloc(sizeof(char)*(l-1));;
+        strncpy(t, s+1, l-2);
+        t[l-2] = '\0';
+        return t;
+    }
+    return s;
 }
 
 long calcSize(char *str, int opt1, int opt2) {

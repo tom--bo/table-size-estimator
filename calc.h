@@ -34,6 +34,7 @@ typedef struct _idx {
 
 
 long atolong(char *str);
+char *extractBackQuote(char *s);
 long calcSize(char *str, int opt1, int opt2);
 
 #endif //TABLE_SIZE_ESTIMATOR_CALC_H
