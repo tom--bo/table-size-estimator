@@ -1,11 +1,11 @@
 all: 
 	bison -d parser.y
-	flex --header-file=lexer.yy.h lexer.l
+	flex -i --header-file=lexer.yy.h lexer.l
 	gcc *.c -o tsm
 
 parse: 
 	bison -d parser.y
-	flex --header-file=lexer.yy.h lexer.l
+	flex -i --header-file=lexer.yy.h lexer.l
 
 clean:
 	rm -f lexer.yy.h parser.tab.h
