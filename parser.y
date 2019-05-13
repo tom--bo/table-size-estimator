@@ -1,4 +1,4 @@
-%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Char Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 MediumBlob MediumInt MediumText Memory National None Not Snull Numeric Precision Primary Real Redundant RowFormat Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
+%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Char Charset Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 MediumBlob MediumInt MediumText Memory National None Not Snull Numeric Precision Primary Real Redundant RowFormat Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,11 +75,13 @@ void yyerror(char* s) {
 %%
 
 Expression: CreateSQL {}
-CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar TableOptions Semi
+CreateSQL: Create OptTemp Table OptExists SQAnyStr LPar ColIndexes RPar TableOptions OptSemi
 OptTemp: /* empty */
        | Temporary
 OptExists: /* empty */
          | IF Not Exists
+OptSemi: /* empty */
+       | Semi
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
 ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
@@ -103,11 +105,11 @@ UniqueKey: Unique
          | Unique Key
 PrimaryKey: Primary
           | Primary Key
-CollateOption: Collate CollationType
-             | Collate Equal CollationType
-CollationType: Utf8
-             | Utf8mb4
-             | SQAnyStr
+CollateOption: Collate SQAnyStr
+             | Collate Equal SQAnyStr
+CharsetOptions: Utf8
+              | Utf8mb4
+              | SQAnyStr
 ColumnFormatOption: Fixed
                   | Dynamic
                   | Default
@@ -190,9 +192,8 @@ BtreeHash: Btree
 TableOptions: /* empty */
            | TableOptions AutoIncrements
            | TableOptions AvgRowLengths
-           | TableOptions DefaultCharSets
+           | TableOptions DefaultCharSets DefaultCollations
            | TableOptions Checksums
-           | TableOptions DefaultCollations
            | TableOptions Comments
            | TableOptions Compressions
            | TableOptions Encryptions
@@ -203,14 +204,15 @@ AutoIncrements: AutoIncrement IntNum
               | AutoIncrement Equal IntNum
 AvgRowLengths: AvgRowLength IntNum
              | AvgRowLength Equal IntNum
-DefaultCharSets: Default Character Set SQAnyStr
-              | Default Character Set Equal SQAnyStr
-              | Character Set SQAnyStr
-              | Character Set Equal SQAnyStr
+DefaultCharSets: Default Charset Equal CharsetOptions
+              | Default Charset CharsetOptions
+              | Charset Equal CharsetOptions
+              | Charset CharsetOptions
 Checksums: Checksum ZeroOne
          | Checksum Equal ZeroOne
 ZeroOne: IntNum { /* TODO: only 0 or 1*/ }
-DefaultCollations: Default CollateOption
+DefaultCollations: /* empty */
+                 | Default CollateOption
                  | CollateOption
 Compressions: Compression Equal CompressOptions
             | Compression CompressOptions
@@ -234,6 +236,15 @@ RowFormatOptions: Default
 #include <stdio.h>
 int yydebug = 1;
 
+long getColSizeByName(char *name) {
+    for(int i = 0; i < nowCol; i++) {
+        if(strcmp(name, cols[i].name) == 0) {
+            return cols[i].size;
+        }
+    }
+    return 0;
+}
+
 // print all array contents
 long calcTotalSize(bool debug) {
     long sum = 0;
@@ -252,13 +263,15 @@ long calcTotalSize(bool debug) {
     }
     printf("\n ====== INDEX ======\n");
     for(int i = 0; i<nowIdx; i++) {
+        for(int j = 0; j<idxs[i].idxColsLen; j++) {
+            printf("colName: %s\n", idxs[i].idxCols[j].colName);
+            idxs[i].size += getColSizeByName(idxs[i].idxCols[j].colName);
+        }
+        sum += idxs[i].size;
         if(debug) {
             printf("------\n");
             printf("Name:    %s\n", idxs[i].idxName);
             printf("Size:    %ld\n", idxs[i].size);
-            for(int j = 0; j<idxs[i].idxColsLen; j++) {
-                printf("colName: %s\n", idxs[i].idxCols[j].colName);
-            }
         }
     }
     return sum;
@@ -274,6 +287,10 @@ int main() {
     long sum = calcTotalSize(true); // debug = true
 
     printf("------\n\n");
-    printf("1 row size = %ld bytes.\n", sum);
+    printf("1 row size = %ld bytes", sum);
+    if(sum >= 1024) {
+        printf("(%ld KB)", sum/1024);
+    }
+    printf(".\n");
     return 0;
 }
