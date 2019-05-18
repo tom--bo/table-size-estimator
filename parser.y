@@ -8,65 +8,6 @@
 #include "calc.h"
 
 // #define YYDEBUG 1
-int nowCol = 0;
-int nowIdx = 0;
-int nowIdxCol = 0;
-
-// define nodes array
-col cols[MAXCOLS] = {};
-idx idxs[MAXIDXS] = {};
-
-long opt1 = -1;
-long opt2 = -1;
-
-void resetOpt() {
-    opt1 = -1;
-    opt2 = -1;
-}
-
-void newCol(char *coltype, long size) {
-    col c;
-    c.name = "";
-    c.coltype = coltype;
-    c.hasPk = false;
-    c.hasIdx = false;
-    c.isNull = false;
-
-    if(size == -1) {
-        c.size = calcSize(coltype, opt1, opt2);
-    } else {
-        c.size = size;
-    }
-
-    cols[nowCol] = c;
-
-    return;
-}
-
-void addColName(char *name) {
-    cols[nowCol].name = extractBackQuote(name);
-}
-
-void addIdxCol(char *name, char *s, char *isAsc) {
-    if(nowIdxCol == 0) {
-        idx ii;
-        ii.size = 0;
-        idxs[nowIdx] = ii;
-    }
-    idxCol ic;
-    ic.prefixSize = atolong(s);
-    ic.colName = extractBackQuote(name);
-    ic.prefixSize = atolong(s);
-    ic.isAsc = (strcmp(isAsc, "asc")) == 0 ? true:false;
-
-    idxs[nowIdx].idxCols[nowIdxCol] = ic;
-    nowIdxCol += 1;
-    idxs[nowIdx].idxColsLen = nowIdxCol;
-}
-
-void addIdxName(char *name) {
-    idxs[nowIdx].idxName = extractBackQuote(name);
-}
 
 void yyerror(char* s) {
     printf("%s\n", s);
@@ -84,21 +25,21 @@ OptSemi: /* empty */
        | Semi
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
-ColIndex: SQAnyStr ColDef { addColName($1); nowCol += 1; resetOpt(); }
-        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar { addIdxName($2); nowIdx += 1; nowIdxCol = 0; }
+ColIndex: SQAnyStr ColDef { addColName($1); incNowCol(); resetOpt(); }
+        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar { addIdxName($2); incNowIdx(); iniNowIdxCol(); }
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
-             | ColDefOptions Not Snull { cols[nowCol].isNull = false; }
+             | ColDefOptions Not Snull { setColsNull(false); }
              | ColDefOptions DefaultOption
              | ColDefOptions AutoIncrement
-             | ColDefOptions UniqueKey { cols[nowCol].hasIdx = true; }
-             | ColDefOptions PrimaryKey { cols[nowCol].hasPk = true; }
+             | ColDefOptions UniqueKey { setHasIdx(true); }
+             | ColDefOptions PrimaryKey { setHasPk(true); }
              | ColDefOptions Comments
              | ColDefOptions ColumnFormat ColumnFormatOption
              | ColDefOptions Storage StorageOption
 
 ColumnFormatOption: ColumnFormat 
-DefaultOption: Default Snull { cols[nowCol].isNull = true; }
+DefaultOption: Default Snull { setColsNull(true); }
              | Default DefaultVal
 DefaultVal: SQAnyStr {}
 UniqueKey: Unique
@@ -160,12 +101,12 @@ Texts: Binary           { newCol("binary", -1); }
 Sets: Enum { newCol("enum", 2); }
     | Set  { newCol("set", 2); }
 SizeOption1: /* empty */
-           | LPar IntNum RPar { opt1 = atolong($2); }
+           | LPar IntNum RPar { setOpt1(atolong($2)); }
 SizeOption2: /* empty */
-           | LPar IntNum Comma IntNum RPar { opt1 = atolong($2); opt2 = atolong($4); }
+           | LPar IntNum Comma IntNum RPar { setOpt1(atolong($2)); setOpt2(atolong($4)); }
 SizeOption1or2: /* empty */
-              | LPar IntNum RPar { opt1 = atolong($2); }
-              | LPar IntNum Comma IntNum RPar { opt1 = atolong($2); opt2 = atolong($4); }
+              | LPar IntNum RPar { setOpt1(atolong($2)); }
+              | LPar IntNum Comma IntNum RPar { setOpt1(atolong($2)); setOpt2(atolong($4)); }
 CharacterSetOptions: /* empty */
                    | Character Set SQAnyStr CollateOptions
 CollateOptions: /* empty */
@@ -233,52 +174,9 @@ RowFormatOptions: Default
                 | Compact
 %%
 
-#include <stdio.h>
 int yydebug = 1;
 
-long getColSizeByName(char *name) {
-    for(int i = 0; i < nowCol; i++) {
-        if(strcmp(name, cols[i].name) == 0) {
-            return cols[i].size;
-        }
-    }
-    return 0;
-}
-
-// print all array contents
-long calcTotalSize(bool debug) {
-    long sum = 0;
-    printf("\n ====== COLUMN ======\n");
-    for(int i = 0; i<nowCol; i++) {
-        if(debug) {
-            printf("------\n");
-            printf("Name:    %s\n", cols[i].name);
-            printf("Type:    %s\n", cols[i].coltype);
-            printf("Size:    %ld\n", cols[i].size);
-            printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
-            printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
-            printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
-        }
-        sum += cols[i].size;
-    }
-    printf("\n ====== INDEX ======\n");
-    for(int i = 0; i<nowIdx; i++) {
-        for(int j = 0; j<idxs[i].idxColsLen; j++) {
-            printf("colName: %s\n", idxs[i].idxCols[j].colName);
-            idxs[i].size += getColSizeByName(idxs[i].idxCols[j].colName);
-        }
-        sum += idxs[i].size;
-        if(debug) {
-            printf("------\n");
-            printf("Name:    %s\n", idxs[i].idxName);
-            printf("Size:    %ld\n", idxs[i].size);
-        }
-    }
-    return sum;
-}
-
 int main() {
-    printf("Input Table definition\n");
 
     if(!yyparse()) {
         printf("successfully ended\n");
