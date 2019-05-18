@@ -14,6 +14,7 @@
 "]"              { return BrckRPar; }
 "["              { return BrckLPar; }
 "="              { yylval = yytext; return Equal; }
+"action"         { yylval = yytext; return Action; }
 "always"         { yylval = yytext; return Always; }
 "as"             { yylval = yytext; return AS; }
 "asc"            { yylval = yytext; return Asc; }
@@ -26,6 +27,7 @@
 "bool"           { yylval = yytext; return Bool; }
 "boolean"        { yylval = yytext; return Boolean; }
 "btree"          { yylval = yytext; return Btree; }
+"cascade"        { yylval = yytext; return Cascade; }
 "char"           { yylval = yytext; return Char; }
 "charset"        { yylval = yytext; return Charset; }
 "character"      { yylval = yytext; return Character; }
@@ -36,12 +38,14 @@
 "compact"        { yylval = yytext; return Compact; }
 "compressed"     { yylval = yytext; return Compressed; }
 "compression"    { yylval = yytext; return Compression; }
+"constraint"     { yylval = yytext; return Constraint; }
 "create"         { yylval = yytext; return Create; }
 "date"           { yylval = yytext; return Date; }
 "datetime"       { yylval = yytext; return Datetime; }
 "dec"            { yylval = yytext; return Dec; }
 "decimal"        { yylval = yytext; return Decimal; }
 "default"        { yylval = yytext; return Default; }
+"delete"         { yylval = yytext; return Delete; }
 "desc"           { yylval = yytext; return Desc; }
 "disk"           { yylval = yytext; return Disk; }
 "double"         { yylval = yytext; return Double; }
@@ -52,6 +56,8 @@
 "exists"         { yylval = yytext; return Exists; }
 "fixed"          { yylval = yytext; return Fixed; }
 "float"          { yylval = yytext; return Float; }
+"foreign"        { yylval = yytext; return Foreign; }
+"full"           { yylval = yytext; return Full; }
 "generated"      { yylval = yytext; return Generated; }
 "hash"           { yylval = yytext; return Hash; }
 "if"             { yylval = yytext; return IF; }
@@ -62,20 +68,27 @@
 "longblob"       { yylval = yytext; return LongBlob; }
 "longtext"       { yylval = yytext; return LongText; }
 "lz4"            { yylval = yytext; return Lz4; }
+"match"          { yylval = yytext; return Match; }
 "mediumblob"     { yylval = yytext; return MediumBlob; }
 "mediumint"      { yylval = yytext; return MediumInt; }
 "mediumtext"     { yylval = yytext; return MediumText; }
 "memory"         { yylval = yytext; return Memory; }
 "national"       { yylval = yytext; return National; }
-"not"            { yylval = yytext; return Not; }
+"no"             { yylval = yytext; return No; }
 "none"           { yylval = yytext; return None; }
+"not"            { yylval = yytext; return Not; }
 "numeric"        { yylval = yytext; return Numeric; }
+"on"             { yylval = yytext; return On; }
+"partial"        { yylval = yytext; return Partial; }
 "precision"      { yylval = yytext; return Precision; }
 "primary"        { yylval = yytext; return Primary; }
 "real"           { yylval = yytext; return Real; }
 "redundant"      { yylval = yytext; return Redundant; }
+"references"     { yylval = yytext; return References; }
+"restrict"       { yylval = yytext; return Restrict; }
 "row_format"     { yylval = yytext; return RowFormat; }
 "set"            { yylval = yytext; return Set; }
+"simple"         { yylval = yytext; return Simple; }
 "smallint"       { yylval = yytext; return SmallInt; }
 "storage"        { yylval = yytext; return Storage; }
 "stored"         { yylval = yytext; return Stored; }
@@ -89,6 +102,7 @@
 "tinytext"       { yylval = yytext; return TinyText; }
 "unique"         { yylval = yytext; return Unique; }
 "unsigned"       { yylval = yytext; return Unsigned; }
+"update"         { yylval = yytext; return Update; }
 "using"          { yylval = yytext; return Using; }
 "utf8"           { yylval = yytext; return Utf8;}
 "utf8mb4"        { yylval = yytext; return Utf8mb4;}

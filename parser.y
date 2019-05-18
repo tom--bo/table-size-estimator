@@ -1,4 +1,4 @@
-%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Char Charset Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Create Date Datetime Dec Decimal Default Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 MediumBlob MediumInt MediumText Memory National None Not Snull Numeric Precision Primary Real Redundant RowFormat Set SmallInt Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Utf8 Utf8mb4 Using Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
+%token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Action Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Cascade Char Charset Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Constraint Create Date Datetime Dec Decimal Default Delete Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Foreign Full Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 Match MediumBlob MediumInt MediumText Memory National No None Not Snull Numeric On Partial Precision Primary Real Redundant References Restrict RowFormat Set SmallInt Simple Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Update Using Utf8 Utf8mb4 Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
 %{
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +26,8 @@ OptSemi: /* empty */
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
 ColIndex: SQAnyStr ColDef { addColName($1); incNowCol(); resetOpt(); }
-        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar { addIdxName($2); incNowIdx(); iniNowIdxCol(); }
+        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar OptReferenceDefinition { addIdxName($2); incNowIdx(); iniNowIdxCol(); }
+/* Column */
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
              | ColDefOptions Not Snull { setColsNull(false); }
@@ -37,8 +38,8 @@ ColDefOptions: /* empty */
              | ColDefOptions Comments
              | ColDefOptions ColumnFormat ColumnFormatOption
              | ColDefOptions Storage StorageOption
-
-ColumnFormatOption: ColumnFormat 
+             | ColDefOptions ReferenceDefinition
+ColumnFormatOption: ColumnFormat
 DefaultOption: Default Snull { setColsNull(true); }
              | Default DefaultVal
 DefaultVal: SQAnyStr {}
@@ -56,10 +57,7 @@ ColumnFormatOption: Fixed
                   | Default
 StorageOption: Disk
              | Memory
-IndexKey: Index
-        | Key
-        | Primary Key
-        | Unique Key
+
 DataType: Bits
         | Nums
         | Times
@@ -118,18 +116,45 @@ NumOptions: /* empty */
           | NumOptions Zerofill
 OptSQAnyStr: /* empty */ { $$ = "(NONE)"; }
            | SQAnyStr { $$ = $1; }
-KeyParts: KeyPart
-        | KeyParts Comma KeyPart
-KeyPart: SQAnyStr OptSize OptAscDesc { addIdxCol($1, $2, $3); }
 OptSize: /* empty */ { $$ = "0"; }
        | LPar IntNum RPar { $$ = $2; }
 OptAscDesc: /* empty */ { $$ = "asc"; }
           | Asc  { $$ = "asc"; }
           | Desc { $$ = "desc"; }
-OptIndexType: /* empty */
-         | Using BtreeHash
 BtreeHash: Btree
          | Hash
+OptConstraintSymbol: /* empty */
+                   | Constraint OptSQAnyStr
+/* Index */
+IndexKey: Index
+        | Key
+        | OptConstraintSymbol Primary Key
+        | OptConstraintSymbol Unique Key
+        | OptConstraintSymbol Unique Index
+        | OptConstraintSymbol Foreign Key
+OptIndexType: /* empty */
+         | Using BtreeHash
+KeyParts: KeyPart
+        | KeyParts Comma KeyPart
+KeyPart: SQAnyStr OptSize OptAscDesc { addIdxCol($1, $2, $3); }
+OptReferenceDefinition: /* empty */
+                      | ReferenceDefinition
+ReferenceDefinition: References SQAnyStr LPar KeyParts RPar OptMatch OptAction
+OptMatch: /* empty */
+        | Match Full
+        | Match Partial
+        | Match Simple
+OptAction: /* empty */
+         | On Delete ReferenceOption
+         | On Update ReferenceOption
+ReferenceOption: Restrict
+               | Cascade
+               | Set Snull
+               | No Action
+               | Set Default
+
+
+/* Table Options */
 TableOptions: /* empty */
            | TableOptions AutoIncrements
            | TableOptions AvgRowLengths
@@ -140,7 +165,6 @@ TableOptions: /* empty */
            | TableOptions Encryptions
            | TableOptions Engines
            | TableOptions RowFormats
-
 AutoIncrements: AutoIncrement IntNum
               | AutoIncrement Equal IntNum
 AvgRowLengths: AvgRowLength IntNum
@@ -177,6 +201,7 @@ RowFormatOptions: Default
 int yydebug = 1;
 
 int main() {
+    printf("Input Table Definition: \n");
 
     if(!yyparse()) {
         printf("successfully ended\n");
