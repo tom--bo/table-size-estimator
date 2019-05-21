@@ -226,7 +226,9 @@ long getColSizeByName(char *name) {
 // print all array contents
 long calcTotalSize(bool debug) {
     long sum = 0;
-    printf("\n ====== COLUMN ======\n");
+    if(debug) {
+        printf("\n ====== COLUMN ======\n");
+    }
     for(int i = 0; i<nowCol; i++) {
         if(debug) {
             printf("------\n");
@@ -239,7 +241,9 @@ long calcTotalSize(bool debug) {
         }
         sum += cols[i].size;
     }
-    printf("\n ====== INDEX ======\n");
+    if(debug) {
+        printf("\n ====== INDEX ======\n");
+    }
     for(int i = 0; i<nowIdx; i++) {
         for(int j = 0; j<idxs[i].idxColsLen; j++) {
             printf("colName: %s\n", idxs[i].idxCols[j].colName);

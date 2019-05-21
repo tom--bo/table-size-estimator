@@ -1,9 +1,6 @@
 %token IntNum RealNum Comma Semi LPar RPar BrckLPar BrckRPar Action Always AS Asc AutoIncrement AvgRowLength BigInt Binary Bit Blob Bool Boolean Btree Cascade Char Charset Character Checksum Collate ColumnFormat Comment Compact Compressed Compression Constraint Create Date Datetime Dec Decimal Default Delete Desc Disk Double Dynamic Encryption Engine Enum Exists Fixed Float Foreign Full Generated Hash IF Index Int Integer Key LongBlob LongText Lz4 Match MediumBlob MediumInt MediumText Memory National No None Not Snull Numeric On Partial Precision Primary Real Redundant References Restrict RowFormat Set SmallInt Simple Storage Stored Table Temporary Text Time Timestamp TinyBlob TinyInt TinyText Unique Unsigned Update Using Utf8 Utf8mb4 Varbinary Varchar Virtual Year SQAnyStr AnyStr Zerofill Zlib Error Equal
 %{
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
 #include "yystype.h"
 #include "calc.h"
 
@@ -198,16 +195,32 @@ RowFormatOptions: Default
                 | Compact
 %%
 
+#include <unistd.h>
+
 int yydebug = 1;
 
-int main() {
+int main(int argc, char* argv[]) {
+    int opt;
+    bool debug = false;
+    while((opt = getopt(argc, argv, "d")) != -1) {
+        switch(opt) {
+            case 'd':
+                printf("-d is specified\n");
+                debug = true;
+                break;
+            default:
+                printf("Usage: %s [-d] \n", argv[0]);
+                return 1;
+        }
+    }
+
     printf("Input Table Definition: \n");
 
     if(!yyparse()) {
         printf("successfully ended\n");
     }
 
-    long sum = calcTotalSize(true); // debug = true
+    long sum = calcTotalSize(debug); // debug = true
 
     printf("------\n\n");
     printf("1 row size = %ld bytes", sum);
