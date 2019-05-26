@@ -218,13 +218,21 @@ int main(int argc, char* argv[]) {
 
     if(!yyparse()) {
         printf("successfully ended\n");
+        long maxSize, aveSize;
 
-        long sum = calcTotalSize(debug); // debug = true
+        calcTotalSize(debug, &maxSize, &aveSize); // debug = true
 
         printf("------\n\n");
-        printf("1 row size = %ld bytes", sum);
-        if(sum >= 1024) {
-            printf("(%ld KB)", sum/1024);
+
+        printf("1 row max size = %ld bytes ", maxSize);
+        if(maxSize >= 1024) {
+            printf("(%ld KB)", maxSize/1024);
+        }
+        printf(".\n");
+
+        printf("1 row Average size = %ld bytes ", aveSize);
+        if(maxSize >= 1024) {
+            printf("(%ld KB)", aveSize/1024);
         }
         printf(".\n");
     }

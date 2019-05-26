@@ -3,14 +3,15 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-const int MAXCOLS = 100;
-const int MAXIDXS = 100;
+#define MAXCOLS 100
+#define MAXIDXS 100
 
 // define column node
 typedef struct _col {
     char *name;
     char *coltype;
-    long size;
+    long maxSize;
+    long aveSize;
     bool hasIdx;
     bool hasPk;
     bool isNull;
@@ -26,7 +27,8 @@ typedef struct _idxCol {
 // define index node
 typedef struct _idx {
     char *idxName;
-    long size;
+    long maxSize;
+    long aveSize;
     int idxColsLen;
     idxCol idxCols[MAXCOLS];
 } idx;
@@ -46,6 +48,24 @@ void resetOpt() {
     opt1 = -1;
     opt2 = -1;
 }
+
+bool isVarLen(char *str) {
+    if(!strncmp(str,"varvinary",strlen(str))
+        || !strncmp(str,"tinyblob",strlen(str))
+        || !strncmp(str,"blob",strlen(str))
+        || !strncmp(str,"mediumblob",strlen(str))
+        || !strncmp(str,"longblob",strlen(str))
+        || !strncmp(str,"varchar",strlen(str))
+        || !strncmp(str,"tinytext",strlen(str))
+        || !strncmp(str,"text",strlen(str))
+        || !strncmp(str,"mediumtext",strlen(str))
+        || !strncmp(str,"longtext",strlen(str))
+    ) {
+        return true;
+    }
+    return false;
+}
+
 long calcSize(char *str, int opt1, int opt2) {
     long ret = 0;
     if(!strncmp(str,"dec",strlen(str)) || !strncmp(str,"decimal",strlen(str)) || !strncmp(str,"numeric",strlen(str))) {
@@ -142,11 +162,16 @@ void newCol(char *coltype, long size) {
     c.isNull = false;
 
     if(size == -1) {
-        c.size = calcSize(coltype, opt1, opt2);
+        c.maxSize = calcSize(coltype, opt1, opt2);
     } else {
-        c.size = size;
+        c.maxSize = size;
     }
 
+    if(isVarLen(c.coltype)) {
+        c.aveSize = c.maxSize / 2;
+    } else {
+        c.aveSize = c.maxSize;
+    }
     cols[nowCol] = c;
 
     return;
@@ -159,7 +184,8 @@ void addColName(char *name) {
 void addIdxCol(char *name, char *s, char *isAsc) {
     if(nowIdxCol == 0) {
         idx ii;
-        ii.size = 0;
+        ii.maxSize = 0;
+        ii.aveSize = 0;
         idxs[nowIdx] = ii;
     }
     idxCol ic;
@@ -209,23 +235,29 @@ void setOpt2(long l) {
     opt2 = l;
 }
 
-
-
-
-// -----------
-
-long getColSizeByName(char *name) {
+long getColMaxSizeByName(char *name) {
     for(int i = 0; i < nowCol; i++) {
         if(strcmp(name, cols[i].name) == 0) {
-            return cols[i].size;
+            return cols[i].maxSize;
         }
     }
     return 0;
 }
 
+long getColAveSizeByName(char *name) {
+    for(int i = 0; i < nowCol; i++) {
+        if(strcmp(name, cols[i].name) == 0) {
+            return cols[i].aveSize;
+        }
+    }
+    return 0;
+}
+
+
 // print all array contents
-long calcTotalSize(bool debug) {
-    long sum = 0;
+void calcTotalSize(bool debug, long *maxSize, long *aveSize) {
+    *maxSize = 0;
+    *aveSize = 0;
     if(debug) {
         printf("\n ====== COLUMN ======\n");
     }
@@ -234,28 +266,32 @@ long calcTotalSize(bool debug) {
             printf("------\n");
             printf("Name:    %s\n", cols[i].name);
             printf("Type:    %s\n", cols[i].coltype);
-            printf("Size:    %ld\n", cols[i].size);
+            printf("MaxSize: %ld\n", cols[i].maxSize);
+            printf("AveSize: %ld\n", cols[i].aveSize);
             printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
             printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
             printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
         }
-        sum += cols[i].size;
+        *maxSize += cols[i].maxSize;
+        *aveSize += cols[i].aveSize;
     }
     if(debug) {
         printf("\n ====== INDEX ======\n");
     }
     for(int i = 0; i<nowIdx; i++) {
         for(int j = 0; j<idxs[i].idxColsLen; j++) {
-            printf("colName: %s\n", idxs[i].idxCols[j].colName);
-            idxs[i].size += getColSizeByName(idxs[i].idxCols[j].colName);
+            idxs[i].maxSize += getColMaxSizeByName(idxs[i].idxCols[j].colName);
+            idxs[i].aveSize += getColAveSizeByName(idxs[i].idxCols[j].colName);
         }
-        sum += idxs[i].size;
+        *maxSize += idxs[i].maxSize;
+        *aveSize += idxs[i].aveSize;
         if(debug) {
             printf("------\n");
             printf("Name:    %s\n", idxs[i].idxName);
-            printf("Size:    %ld\n", idxs[i].size);
+            printf("Max Size:    %ld\n", idxs[i].maxSize);
+            printf("Ave Size:    %ld\n", idxs[i].aveSize);
         }
     }
-    return sum;
+    return;
 }
 
