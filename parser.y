@@ -214,7 +214,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    printf("Input Table Definition: \n");
+    printf("Input Table Definition: (Please type ^d to end input) \n");
 
     if(!yyparse()) {
         printf("successfully ended\n");
