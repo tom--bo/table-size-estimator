@@ -295,3 +295,19 @@ void calcTotalSize(bool debug, long *maxSize, long *aveSize) {
     return;
 }
 
+void printResult(long maxSize, long aveSize) {
+        printf("------\n");
+
+        printf("1 row max size = %ld bytes ", maxSize);
+        if(maxSize >= 1024) {
+            printf("(%ld KB)", maxSize/1024);
+        }
+        printf(".\n");
+
+        printf("1 row Average size = %ld bytes ", aveSize);
+        if(maxSize >= 1024) {
+            printf("(%ld KB)", aveSize/1024);
+        }
+        printf(".\n");
+}
+

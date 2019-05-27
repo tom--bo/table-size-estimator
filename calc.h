@@ -24,5 +24,6 @@ char *extractBackQuote(char *s);
 long getColSizeByName(char *name);
 long calcSize(char *str, int opt1, int opt2);
 void calcTotalSize(bool debug, long *maxSize, long *aveSize);
+void printResult(long maxSize, long aveSize);
 
 #endif //TABLE_SIZE_ESTIMATOR_CALC_H
