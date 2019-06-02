@@ -1,5 +1,9 @@
 #!/bin/bash
 
+SCRIPT_DIR=$(cd $(dirname $0); pwd)
+HOME_DIR=`dirname ${SCRIPT_DIR}`
+
+
 TotalCnt=2
 FailCnt=0
 FailCnt_d=0
@@ -9,7 +13,7 @@ echo "- Tests without options"
 # tests with no option
 for i in `seq 1 $TotalCnt`; do
 	# without options
-	diff <(../tsm < ./input/${i}.sql) ./expected/${i}.out > /dev/null 2>&1
+	diff <(${HOME_DIR}/tsm < ${HOME_DIR}/tests/input/${i}.sql) ${HOME_DIR}/tests/expected/${i}.out > /dev/null 2>&1
 	case $? in
 		0 ) echo "  case ${i} ... success" ;;
 		1 ) echo "  case ${i} ... fail"
@@ -23,7 +27,8 @@ echo "- Tests with -d option"
 # tests with -d option
 for i in `seq 1 $TotalCnt`; do
 	# without options
-	diff <(../tsm -d < ./input/${i}.sql) ./expected/${i}d.out > /dev/null 2>&1
+	diff <(${HOME_DIR}/tsm -d < ${HOME_DIR}/tests/input/${i}.sql) ${HOME_DIR}/tests/expected/${i}d.out > /dev/null 2>&1
+	diff <(${SCRIPT_DIR}/../tsm -d < ${SCRIPT_DIR}/input/${i}.sql) ${SCRIPT_DIR}/expected/${i}d.out > /dev/null 2>&1
 	case $? in
 		0 ) echo "  case ${i} ... success" ;;
 		1 ) echo "  case ${i} ... fail"
