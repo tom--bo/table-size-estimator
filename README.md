@@ -15,7 +15,7 @@ make
 you can use as simple script
 
 ```sh
-$ ./tsm
+$ ./tse
  Input Table Definition: (Please type ^d to end input)
  create table `t3` (
    `id` int not null auto_increment primary key,
@@ -34,7 +34,7 @@ $ ./tsm
 Otherwise you can redirect a file which has `CREATE TABLE` syntax.
 
 ```sh
-./tsm < tests/input/1.sql
+./tse < tests/input/1.sql
 Input Table Definition: (Please type ^d to end input)
 successfully ended
 ------
@@ -49,7 +49,7 @@ successfully ended
 - -d: print all column and index information.
 
 ```sh
-./tsm -d
+./tse -d
 -d is specified
 Input Table Definition: (Please type ^d to end input)
  create table `t3` (

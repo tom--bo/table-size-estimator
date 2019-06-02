@@ -1,7 +1,7 @@
 all: 
 	@bison -d parser.y
 	@flex -i --header-file=lexer.yy.h lexer.l
-	@gcc -w *.c -o tsm
+	@gcc -w *.c -o tse
 
 parse: 
 	@bison -d parser.y
@@ -19,4 +19,4 @@ clean:
 	@rm -f *tab.c
 	@rm -f *.output
 	@rm -f p parser
-	@rm -f tsm
+	@rm -f tse
