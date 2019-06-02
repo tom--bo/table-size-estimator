@@ -1,0 +1,45 @@
+Input Table Definition: (Please type ^d to end input) 
+successfully ended
+
+ ====== COLUMN ======
+------
+Name:    id
+Type:    int
+MaxSize: 4
+AveSize: 4
+PK? :    false
+Index?:  false
+IsNull?: false
+------
+Name:    c1
+Type:    int
+MaxSize: 4
+AveSize: 4
+PK? :    false
+Index?:  false
+IsNull?: false
+------
+Name:    c2
+Type:    int
+MaxSize: 4
+AveSize: 4
+PK? :    false
+Index?:  false
+IsNull?: false
+
+ ====== INDEX ======
+------
+Name:    (NONE)
+Max Size:    4
+Ave Size:    4
+------
+Name:    c2
+Max Size:    4
+Ave Size:    4
+------
+Name:    (NONE)
+Max Size:    8
+Ave Size:    8
+------
+1 row max size = 28 bytes .
+1 row Average size = 28 bytes .

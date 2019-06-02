@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
     while((opt = getopt(argc, argv, "d")) != -1) {
         switch(opt) {
             case 'd':
-                printf("-d is specified\n");
+                // printf("-d is specified\n");
                 debug = true;
                 break;
             default:
