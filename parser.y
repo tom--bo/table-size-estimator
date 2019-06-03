@@ -27,6 +27,7 @@ ColIndex: SQAnyStr ColDef { addColName($1); incNowCol(); resetOpt(); }
 /* Column */
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
+             | ColDefOptions Snull { setColsNull(true); }
              | ColDefOptions Not Snull { setColsNull(false); }
              | ColDefOptions DefaultOption
              | ColDefOptions AutoIncrement
@@ -34,6 +35,7 @@ ColDefOptions: /* empty */
              | ColDefOptions PrimaryKey { setHasPk(true); }
              | ColDefOptions Comments
              | ColDefOptions ColumnFormat ColumnFormatOption
+             | ColDefOptions CollateOption
              | ColDefOptions Storage StorageOption
              | ColDefOptions ReferenceDefinition
 ColumnFormatOption: ColumnFormat
@@ -155,7 +157,8 @@ ReferenceOption: Restrict
 TableOptions: /* empty */
            | TableOptions AutoIncrements
            | TableOptions AvgRowLengths
-           | TableOptions DefaultCharSets DefaultCollations
+           | TableOptions DefaultCharSets
+           | TableOptions DefaultCollations
            | TableOptions Checksums
            | TableOptions Comments
            | TableOptions Compressions
@@ -173,8 +176,7 @@ DefaultCharSets: Default Charset Equal CharsetOptions
 Checksums: Checksum ZeroOne
          | Checksum Equal ZeroOne
 ZeroOne: IntNum { /* TODO: only 0 or 1*/ }
-DefaultCollations: /* empty */
-                 | Default CollateOption
+DefaultCollations: Default CollateOption
                  | CollateOption
 Compressions: Compression Equal CompressOptions
             | Compression CompressOptions
