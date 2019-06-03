@@ -4,7 +4,7 @@ SCRIPT_DIR=$(cd $(dirname $0); pwd)
 HOME_DIR=`dirname ${SCRIPT_DIR}`
 
 
-TotalCnt=2
+TotalCnt=5
 FailCnt=0
 FailCnt_d=0
 

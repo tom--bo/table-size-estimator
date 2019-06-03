@@ -1,0 +1,41 @@
+Input Table Definition: (Please type ^d to end input) 
+successfully ended
+
+ ====== COLUMN ======
+------
+Name:    id
+Type:    int
+MaxSize: 4
+AveSize: 4
+PK? :    false
+Index?:  false
+IsNull?: true
+------
+Name:    accountoid
+Type:    int
+MaxSize: 4
+AveSize: 4
+PK? :    false
+Index?:  false
+IsNull?: true
+------
+Name:    dt
+Type:    datetime
+MaxSize: 5
+AveSize: 5
+PK? :    false
+Index?:  false
+IsNull?: true
+------
+Name:    x
+Type:    decimal
+MaxSize: 9
+AveSize: 9
+PK? :    false
+Index?:  false
+IsNull?: true
+
+ ====== INDEX ======
+------
+1 row max size = 22 bytes .
+1 row Average size = 22 bytes .

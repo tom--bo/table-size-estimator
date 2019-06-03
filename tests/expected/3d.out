@@ -1,0 +1,57 @@
+Input Table Definition: (Please type ^d to end input) 
+successfully ended
+
+ ====== COLUMN ======
+------
+Name:    id
+Type:    int
+MaxSize: 4
+AveSize: 4
+PK? :    true
+Index?:  false
+IsNull?: false
+------
+Name:    c0
+Type:    date
+MaxSize: 3
+AveSize: 3
+PK? :    false
+Index?:  false
+IsNull?: false
+------
+Name:    c1
+Type:    timestamp
+MaxSize: 7
+AveSize: 7
+PK? :    false
+Index?:  false
+IsNull?: false
+------
+Name:    c2
+Type:    bigint
+MaxSize: 8
+AveSize: 8
+PK? :    false
+Index?:  true
+IsNull?: false
+------
+Name:    c3
+Type:    decimal
+MaxSize: 6
+AveSize: 6
+PK? :    false
+Index?:  false
+IsNull?: false
+------
+Name:    c4
+Type:    varchar
+MaxSize: 129
+AveSize: 64
+PK? :    false
+Index?:  false
+IsNull?: false
+
+ ====== INDEX ======
+------
+1 row max size = 157 bytes .
+1 row Average size = 92 bytes .
