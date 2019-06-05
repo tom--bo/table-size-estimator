@@ -1,6 +1,6 @@
 # Table-size-estimator
 
-Table-size-estimator estimates table size from `CREATE TABLE ...` syntax.
+Table-size-estimator estimates 1 record disk-size from `CREATE TABLE ...` syntax.
 
 ## How to use
 
@@ -15,7 +15,7 @@ make
 you can use as simple script
 
 ```sh
-$ ./tse
+$ ./bin/tse
  Input Table Definition: (Please type ^d to end input)
  create table `t3` (
    `id` int not null auto_increment primary key,
@@ -34,7 +34,7 @@ $ ./tse
 Otherwise you can redirect a file which has `CREATE TABLE` syntax.
 
 ```sh
-./tse < tests/input/1.sql
+./bin/tse < tests/input/1.sql
 Input Table Definition: (Please type ^d to end input)
 successfully ended
 ------
@@ -49,7 +49,7 @@ successfully ended
 - -d: print all column and index information.
 
 ```sh
-./tse -d
+./bin/tse -d
 -d is specified
 Input Table Definition: (Please type ^d to end input)
  create table `t3` (
@@ -189,5 +189,16 @@ table_option:
 - Part of TABLE_OPTION
 - CHECK constraint
 - PARTITION, SUBPARTITION, PARTITION_OPTIONS
+
+
+## How to test
+
+Exec `make test`!
+Please see more Makefile or `tests` dir.
+
+```
+make test
+```
+
 
 
