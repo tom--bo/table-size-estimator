@@ -23,7 +23,7 @@ OptSemi: /* empty */
 ColIndexes: ColIndex
           | ColIndexes Comma ColIndex
 ColIndex: SQAnyStr ColDef { addColName($1); incNowCol(); resetOpt(); }
-        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar OptReferenceDefinition { addIdxName($2); incNowIdx(); iniNowIdxCol(); }
+        | IndexKey OptSQAnyStr OptIndexType LPar KeyParts RPar OptReferenceDefinition { setIdxType($1); addIdxName($2); incNowIdx(); iniNowIdxCol(); }
 /* Column */
 ColDef: DataType ColDefOptions
 ColDefOptions: /* empty */
@@ -125,14 +125,14 @@ BtreeHash: Btree
 OptConstraintSymbol: /* empty */
                    | Constraint OptSQAnyStr
 /* Index */
-IndexKey: Index
-        | Key
-        | OptConstraintSymbol Primary Key
-        | OptConstraintSymbol Unique Key
-        | OptConstraintSymbol Unique Index
-        | OptConstraintSymbol Foreign Key
+IndexKey: Index { $$ = "SK"; }
+        | Key { $$ = "SK"; }
+        | OptConstraintSymbol Primary Key { $$ = "PK"; }
+        | OptConstraintSymbol Unique Key { $$ = "UK"; }
+        | OptConstraintSymbol Unique Index { $$ = "UK"; }
+        | OptConstraintSymbol Foreign Key { $$ = "FK"; }
 OptIndexType: /* empty */
-         | Using BtreeHash
+            | Using BtreeHash
 KeyParts: KeyPart
         | KeyParts Comma KeyPart
 KeyPart: SQAnyStr OptSize OptAscDesc { addIdxCol($1, $2, $3); }

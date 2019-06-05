@@ -27,6 +27,7 @@ typedef struct _idxCol {
 // define index node
 typedef struct _idx {
     char *idxName;
+    char *idxType;
     long maxSize;
     long aveSize;
     int idxColsLen;
@@ -203,6 +204,10 @@ void addIdxName(char *name) {
     idxs[nowIdx].idxName = extractBackQuote(name);
 }
 
+void setIdxType(char *type) {
+    idxs[nowIdx].idxType = type;
+}
+
 void incNowCol() {
     nowCol += 1;
 }
@@ -258,6 +263,9 @@ long getColAveSizeByName(char *name) {
 void calcTotalSize(bool debug, long *maxSize, long *aveSize) {
     *maxSize = 0;
     *aveSize = 0;
+    int pkSize = 0;
+    int skCnt = 0;
+
     if(debug) {
         printf("\n ====== COLUMN ======\n");
     }
@@ -271,6 +279,12 @@ void calcTotalSize(bool debug, long *maxSize, long *aveSize) {
             printf("PK? :    %s\n", (cols[i].hasPk ? "true": "false"));
             printf("Index?:  %s\n", (cols[i].hasIdx ? "true": "false"));
             printf("IsNull?: %s\n", (cols[i].isNull ? "true": "false"));
+        }
+        // PK, SK judge, count
+        if(cols[i].hasPk) {
+            pkSize = cols[i].maxSize;
+        } else if(cols[i].hasIdx) {
+            skCnt += 1;
         }
         *maxSize += cols[i].maxSize;
         *aveSize += cols[i].aveSize;
@@ -291,7 +305,15 @@ void calcTotalSize(bool debug, long *maxSize, long *aveSize) {
             printf("Max Size:    %ld\n", idxs[i].maxSize);
             printf("Ave Size:    %ld\n", idxs[i].aveSize);
         }
+
+        if(strcmp(idxs[i].idxType, "PK") == 0) {
+            pkSize = idxs[i].maxSize;
+        } else if(strcmp(idxs[i].idxType, "UK") == 0 || strcmp(idxs[i].idxType, "SK") == 0) {
+            skCnt += 1;
+        }
     }
+    *maxSize += pkSize * skCnt;
+    *aveSize += pkSize * skCnt;
     return;
 }
 
