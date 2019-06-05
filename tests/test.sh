@@ -13,7 +13,7 @@ echo "- Tests without options"
 # tests with no option
 for i in `seq 1 $TotalCnt`; do
 	# without options
-	diff <(${HOME_DIR}/tse < ${HOME_DIR}/tests/input/${i}.sql) ${HOME_DIR}/tests/expected/${i}.out > /dev/null 2>&1
+	diff <(${HOME_DIR}/bin/tse < ${HOME_DIR}/tests/input/${i}.sql) ${HOME_DIR}/tests/expected/${i}.out > /dev/null 2>&1
 	case $? in
 		0 ) echo "  case ${i} ... success" ;;
 		1 ) echo "  case ${i} ... fail"
@@ -27,7 +27,7 @@ echo "- Tests with -d option"
 # tests with -d option
 for i in `seq 1 $TotalCnt`; do
 	# without options
-	diff <(${HOME_DIR}/tse -d < ${HOME_DIR}/tests/input/${i}.sql) ${HOME_DIR}/tests/expected/${i}d.out > /dev/null 2>&1
+	diff <(${HOME_DIR}/bin/tse -d < ${HOME_DIR}/tests/input/${i}.sql) ${HOME_DIR}/tests/expected/${i}d.out > /dev/null 2>&1
 	case $? in
 		0 ) echo "  case ${i} ... success" ;;
 		1 ) echo "  case ${i} ... fail"
@@ -52,9 +52,5 @@ if [ $FailCnt_d -eq 0 ]; then
 else
 	echo "[Fail] ${FailCnt_d}/${TotalCnt} tests with option -d."
 fi
-
-
-
-
 
 
