@@ -312,6 +312,20 @@ void calcTotalSize(bool debug, long *maxSize, long *aveSize) {
             skCnt += 1;
         }
     }
+
+    // Consider metadata in 1 record
+    //   `nowCol` is same as number of column in table
+    //   refer https://dev.mysql.com/doc/internals/en/innodb-overview.html
+    if(*maxSize <= 127) {
+        *maxSize += nowCol * 1 + 6;
+        *aveSize += nowCol * 1 + 6;
+    } else {
+        *maxSize += nowCol * 2 + 6;
+        *aveSize += nowCol * 2 + 6;
+    }
+
+
+    // Consider 2nd index pointer for PK
     *maxSize += pkSize * skCnt;
     *aveSize += pkSize * skCnt;
     return;
