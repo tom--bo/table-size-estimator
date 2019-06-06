@@ -114,7 +114,7 @@
 "zlib"           { yylval = yytext; return Zlib; }
 "null"           { yylval = yytext; return Snull; }
 
-['`]?[a-z]+[a-z0-9_\-]*['`]? { yylval = strdup(yytext); return SQAnyStr; }
+['`]?[a-z0-9_\-]*['`]? { yylval = strdup(yytext); return SQAnyStr; }
 "/*"[a-z0-9 ]*"*/"   {}
 "\n"|" "|"\t"        {}
 
