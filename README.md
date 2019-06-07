@@ -16,19 +16,17 @@ you can use as simple script
 
 ```sh
 $ ./bin/tse
- Input Table Definition: (Please type ^d to end input)
- create table `t3` (
-   `id` int not null auto_increment primary key,
-   `c1` int not null,
-   `c2` int not null,
-   primary key (`id`),
-   unique key `c2` (`c2`)
- );
- # (please type ^d for end of input)
- successfully ended
- ------
- 1 row max size = 20 bytes .
- 1 row Average size = 20 bytes .
+Input Table Definition: (Please type ^d to end input)
+create table `t3` (
+  `id` int not null auto_increment primary key,
+  `c1` int not null,
+  `c2` int not null,
+  unique key `c2` (`c2`)
+);
+successfully ended
+------
+1 row max size = 29 bytes .
+1 row Average size = 29 bytes .
 ```
 
 Otherwise you can redirect a file which has `CREATE TABLE` syntax.
@@ -38,8 +36,8 @@ Otherwise you can redirect a file which has `CREATE TABLE` syntax.
 Input Table Definition: (Please type ^d to end input)
 successfully ended
 ------
-1 row max size = 28 bytes .
-1 row Average size = 28 bytes .
+1 row max size = 41 bytes .
+1 row Average size = 41 bytes .
 ```
 
 
@@ -50,15 +48,13 @@ successfully ended
 
 ```sh
 ./bin/tse -d
--d is specified
 Input Table Definition: (Please type ^d to end input)
- create table `t3` (
-   `id` int not null auto_increment primary key,
-   `c1` int not null,
-   `c2` int not null,
-   primary key (`id`),
-   unique key `c2` (`c2`)
- );
+create table `t3` (
+  `id` int not null auto_increment primary key,
+  `c1` int not null,
+  `c2` int not null,
+  unique key `c2` (`c2`)
+);
 successfully ended
 
  ====== COLUMN ======
@@ -89,16 +85,12 @@ IsNull?: false
 
  ====== INDEX ======
 ------
-Name:    (NONE)
-Max Size:    4
-Ave Size:    4
-------
 Name:    c2
 Max Size:    4
 Ave Size:    4
 ------
-1 row max size = 20 bytes .
-1 row Average size = 20 bytes .
+1 row max size = 29 bytes .
+1 row Average size = 29 bytes .
 ```
 
 
