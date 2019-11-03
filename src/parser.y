@@ -38,7 +38,6 @@ ColDefOptions: /* empty */
              | ColDefOptions CollateOption
              | ColDefOptions Storage StorageOption
              | ColDefOptions ReferenceDefinition
-ColumnFormatOption: ColumnFormat
 DefaultOption: Default Snull { setColsNull(true); }
              | Default DefaultVal
 DefaultVal: SQAnyStr {}
